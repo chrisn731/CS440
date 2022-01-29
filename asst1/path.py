@@ -5,14 +5,23 @@ from graph_ent import Node, Edge
 
 # TODO: Remove commented out code that is no longer used
 
+# Nodes 2d array.
+# nodes[x][y] returns the location of a Node at the coordinate x,y
 nodes = []
+
+# Edges dictionary.
+# To use: edges[((x0, y0), (x1, y1))] returns the edge where the starting
+# point is x0, y0 and the ending point is x1, y1.
 edges = dict()
-c = None
+c = None # Canvas
 
 WIDTH = 100
 HEIGHT = 50
-SCALE = 25
+SCALE = 25 # Scale factor for the elements to show properly on the canvas
 
+# init_graph - initialize the graph data structures.
+# Builds the nodes (vertexes) into the 2d nodes array
+# Builds the edges dictionary
 def init_graph(g_nodes):
     for x in range(WIDTH + 1):
         row = []
@@ -24,32 +33,38 @@ def init_graph(g_nodes):
             row.append(Node(x, y, b))
         nodes.append(row)
 
+    # Time to build the edges!
     for x in range(WIDTH + 1):
         for y in range(HEIGHT + 1):
-            #top left
+            # Draw edge to the top left
             if x > 0 and y > 0 and nodes[x-1][y-1].blocked == 0:
                 edges[((x,y),(x-1,y-1))] = Edge((x,y), (x-1,y-1), math.sqrt(2))
-            #top right
+
+            # Draw edge to the top right
             if x < WIDTH and y > 0 and nodes[x][y-1].blocked == 0:
                 edges[((x,y),(x+1, y-1))] = Edge((x,y), (x+1, y-1), math.sqrt(2))
-            #up
+
+            # Draw edge straight up
             if y > 0:
                 if x == 0 and nodes[x][y-1].blocked == 0:
                     edges[((x,y),(x, y-1))] = Edge((x,y), (x, y-1), 1)
                 elif x > 0 and (nodes[x-1][y-1].blocked == 0 or nodes[x][y-1].blocked == 0):
                     edges[((x,y),(x, y-1))] = Edge((x,y), (x, y-1), 1)
-            #right
+                
+            # Draw edge to the right
             if x < WIDTH:
                 if y == 0 and nodes[x][y].blocked == 0:
                     edges[((x,y),(x+1, y))] = Edge((x,y), (x+1, y), 1)
                 elif y > 0 and (nodes[x][y-1].blocked == 0 or nodes[x][y].blocked == 0):
                     edges[((x,y),(x+1, y))] = Edge((x,y), (x+1, y), 1)
 
+# create_grid - Draws elements on the canvas
 def create_grid(start, end):
     w = c.winfo_width() # Get current width of canvas
     h = c.winfo_height() # Get current height of canvas
     #c.delete('grid_line') # Will only remove the grid_line
 
+    # Draw the blocked cells 
     for row in nodes:
         for node in row:
             if node.blocked == 1:
@@ -60,23 +75,28 @@ def create_grid(start, end):
                                     fill='gray',
                                     outline='')
 
+    # Draw the edges
     for edge in edges.values():
         p1 = edge.p1
         p2 = edge.p2
         c.create_line([(scale(p1[0]), scale(p1[1])), (scale(p2[0]), scale(p2[1]))])
 
+    # Draw the start point
     c.create_oval(scale(start[0]) - 5,
                   scale(start[1]) + 5,
                   scale(start[0]) + 5,
                   scale(start[1]) - 5,
                   fill='blue')
 
+    # Draw the end point
     c.create_oval(scale(end[0]) - 5,
                   scale(end[1]) + 5,
                   scale(end[0]) + 5,
                   scale(end[1]) - 5,
                   fill='red')
 
+# init_window - Initalize the tkinter window
+# Sets up the window, frame, scrolling, etc.
 def init_window(root):
     global c
     #Set window size
@@ -114,9 +134,11 @@ def init_window(root):
     menubar.add_cascade(label="Zoom", menu=zoom_menu)
     root.config(menu=menubar)
 
+# Scale a number for the canvas
 def scale(x):
     return x * SCALE
 
+# TODO: I dont think we need this anymore
 def choose_endpoints():
     r1 = scale(random.randrange(100))
     r2 = scale(random.randrange(50))
@@ -126,12 +148,14 @@ def choose_endpoints():
     end = (e1, e2)
     return (start, end)
 
+# TODO: Mike is working on this
 def zoom_out():
     global SCALE
     SCALE = SCALE / 2
     create_grid()
     print("zoomed out")
 
+# TODO: Mike is working on this
 def zoom_in():
     global SCALE
     SCALE = SCALE * 2
@@ -142,22 +166,25 @@ if __name__ == "__main__":
     #init_graph(g_nodes)
     endpoints = choose_endpoints()
 
-    #Create main window
+    # Create main window
     root = tk.Tk()
     init_window(root)
 
     with open("graph.txt", 'r') as f:
         line = f.readline().strip().split()
-        start = (int(line[0]),int(line[1]))
+        start = (int(line[0]), int(line[1])) # Get the start point
         line = f.readline().strip().split()
-        end = (int(line[0]),int(line[1]))
+        end = (int(line[0]), int(line[1])) # Get the end point
         line = f.readline().strip().split()
         WIDTH = int(line[0])
         HEIGHT = int(line[1])
+
+    # Everything from here on is about (un)blocked cells...
         g_nodes = dict()
         for line in f.readlines():
             split = line.strip().split()
-            g_nodes[(int(split[0]),int(split[1]))] = int(split[2])
+            g_nodes[(int(split[0]), int(split[1]))] = int(split[2])
+
         init_graph(g_nodes)
         create_grid(start, end)
-    root.mainloop()
+    root.mainloop() # Startup UI
