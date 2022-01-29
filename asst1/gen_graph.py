@@ -1,8 +1,8 @@
 import random
 
 nodes = dict()
-range_x = 100
-range_y = 50
+range_x = 100 # How large the X-axis will be
+range_y = 50 # How large the Y-axis will be
 
 def gen_endpoints():
     while True:
@@ -64,9 +64,3 @@ with open("graph.txt", 'w') as f:
             if nodes[(x,y)] is False:
                 blocked = 1
             f.write(str(x) + " " + str(y) + " " + str(blocked) + "\n")
-
-
-
-
-
-

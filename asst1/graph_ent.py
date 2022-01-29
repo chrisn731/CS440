@@ -9,4 +9,3 @@ class Edge():
         self.p1 = p1
         self.p2 = p2
         self.weight = weight
-
