@@ -1,5 +1,6 @@
 from queue import PriorityQueue
 from graph_ent import Edge
+import math
 
 def get_edge(s, e, edges):
     if (s, e) in edges:
@@ -10,14 +11,16 @@ def get_edge(s, e, edges):
         return None
 
 def heuristic(s, goal):
-    return 0
+    x = min(abs(s[0] - goal[0]), abs(s[1] - goal[1]))
+    y = max(abs(s[0] - goal[0]), abs(s[1] - goal[1]))
+    return math.sqrt(2) * x + y - x
 
-def update_vertex(s, e, cost_so_far, parent, edge: Edge, fringe: PriorityQueue):
+def update_vertex(s, e, cost_so_far, parent, edge: Edge, fringe: PriorityQueue, goal):
     new = cost_so_far[s] + edge.weight
     if new < cost_so_far[e]:
         cost_so_far[e] = new
         parent[e] = s
-        fringe.put((cost_so_far[e], e))
+        fringe.put((cost_so_far[e] + heuristic(e, goal), e))
 
 def a_star(start, goal, edges):
     print("Start: " + str(start))
@@ -68,6 +71,6 @@ def a_star(start, goal, edges):
                 if is_new:
                     cost_so_far[end] = float('inf')
                     parent[end] = None
-                update_vertex(s, end, cost_so_far, parent, edge, fringe)
+                update_vertex(s, end, cost_so_far, parent, edge, fringe, goal)
 
     print("No path found")
