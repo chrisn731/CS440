@@ -52,7 +52,7 @@ def line_of_sight(s, e, nodes):
         sx = -1
     else:
         sx = 1
-    
+
     if dx >= dy:
         while x0 != x1:
             f += dy
@@ -74,7 +74,7 @@ def line_of_sight(s, e, nodes):
                     return False
                 x0 += sx
                 f -= dy
-        
+
             if f != 0 and nodes[x0 + ((sx - 1)//2)][y0 + ((sy - 1)//2)].blocked:
                 return False
             if dx == 0 and nodes[x0][y0 + ((sy - 1)//2)] and nodes[x0 - 1][y0 + ((sy - 1)//2)]:
@@ -82,14 +82,14 @@ def line_of_sight(s, e, nodes):
             y0 += sy
     return True
 
-def theta_star(start, goal, nodes, edges):
+def theta_star(window, start, goal, nodes, edges):
     print("Start: " + str(start))
     print("Goal: " + str(goal))
     fringe = PriorityQueue() # [(f, (x, y))]
     closed = []
     cost_so_far = dict()
     parent = dict()
-    
+
     cost_so_far[start] = 0
     parent[start] = start
     fringe.put((0, start))
@@ -99,16 +99,21 @@ def theta_star(start, goal, nodes, edges):
         s = t[1]
 
         if s == goal:
+            answer = []
             print("Path Found with cost: " + str(t[0]))
             curr = s
             p = parent[s]
             while p != start:
                 print(curr)
+                answer.append(curr)
                 curr = p
                 p = parent[p]
             print(curr)
             print(p)
-            return
+            answer.append(curr)
+            answer.append(p)
+            print(answer)
+            return answer
 
         closed.append(s)
         for i in range(-1, 2):
@@ -132,5 +137,6 @@ def theta_star(start, goal, nodes, edges):
                     cost_so_far[end] = float('inf')
                     parent[end] = None
                 update_vertex(s, end, cost_so_far, parent, nodes, edge, fringe, goal)
+                window.draw_line(s, end)
 
     print("No path found")

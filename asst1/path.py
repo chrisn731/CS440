@@ -1,4 +1,5 @@
 import random
+from a_star import a_star
 import math
 import tkinter as tk
 from graph_ent import Node, Edge
@@ -17,7 +18,9 @@ c = None # Canvas
 
 WIDTH = 100
 HEIGHT = 50
-SCALE = 25 # Scale factor for the elements to show properly on the canvas
+SCALE = 25  # Scale factor for the elements to show properly on the canvas
+MIN_SCALE = 25
+MAX_SCALE = 100
 
 # init_graph - initialize the graph data structures.
 # Builds the nodes (vertexes) into the 2d nodes array
@@ -50,7 +53,7 @@ def init_graph(g_nodes):
                     edges[((x,y),(x, y-1))] = Edge((x,y), (x, y-1), 1)
                 elif x > 0 and (nodes[x-1][y-1].blocked == 0 or nodes[x][y-1].blocked == 0):
                     edges[((x,y),(x, y-1))] = Edge((x,y), (x, y-1), 1)
-                
+
             # Draw edge to the right
             if x < WIDTH:
                 if y == 0 and nodes[x][y].blocked == 0:
@@ -64,11 +67,11 @@ def create_grid(start, end):
     h = c.winfo_height() # Get current height of canvas
     #c.delete('grid_line') # Will only remove the grid_line
 
-    # Draw the blocked cells 
+    # Draw the blocked cells
     for row in nodes:
         for node in row:
             if node.blocked == 1:
-                c.create_rectangle(scale(node.x), 
+                c.create_rectangle(scale(node.x),
                                     scale(node.y),
                                     scale(node.x + 1),
                                     scale(node.y + 1),
@@ -81,18 +84,20 @@ def create_grid(start, end):
         p2 = edge.p2
         c.create_line([(scale(p1[0]), scale(p1[1])), (scale(p2[0]), scale(p2[1]))])
 
+    offset = int(SCALE / 5)
+
     # Draw the start point
-    c.create_oval(scale(start[0]) - 5,
-                  scale(start[1]) + 5,
-                  scale(start[0]) + 5,
-                  scale(start[1]) - 5,
+    c.create_oval(scale(start[0]) - offset,
+                  scale(start[1]) + offset,
+                  scale(start[0]) + offset,
+                  scale(start[1]) - offset,
                   fill='blue')
 
     # Draw the end point
-    c.create_oval(scale(end[0]) - 5,
-                  scale(end[1]) + 5,
-                  scale(end[0]) + 5,
-                  scale(end[1]) - 5,
+    c.create_oval(scale(end[0]) - offset,
+                  scale(end[1]) + offset,
+                  scale(end[0]) + offset,
+                  scale(end[1]) - offset,
                   fill='red')
 
 # init_window - Initalize the tkinter window
@@ -111,6 +116,19 @@ def init_window(root):
     #create_grid()
     #c.bind('<Configure>', create_grid)
 
+    #Set up topbar
+    topbar = tk.Frame(root, width = scale(WIDTH), height = 20)
+    topbar.pack(fill=tk.BOTH, expand=True)
+    label_x = tk.Label(topbar, text="X: ")
+    label_x.grid(row=0, column=0)
+    button1 = tk.Text(topbar, width=5, height=1)
+    button1.grid(row=0, column=1)
+    label_y = tk.Label(topbar, text="Y: ")
+    label_y.grid(row=0, column=2)
+    button2 = tk.Text(topbar, width=5, height=1)
+    button2.grid(row=0, column=3)
+
+
     #Sets up a canvas and scrollbars inside of a frame
     frame = tk.Frame(root, width = scale(WIDTH), height = scale(HEIGHT))
     frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
@@ -128,11 +146,50 @@ def init_window(root):
     c.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
     menubar = tk.Menu(root)
+    algorithms_menu = tk.Menu(menubar, tearoff=0)
+    algorithms_menu.add_command(label="A*")
+    algorithms_menu.add_command(label="Theta*")
+    menubar.add_cascade(label="Algorithms", menu=algorithms_menu)
     zoom_menu = tk.Menu(menubar, tearoff=0)
     zoom_menu.add_command(label="In", command=zoom_in)
     zoom_menu.add_command(label="Out", command=zoom_out)
     menubar.add_cascade(label="Zoom", menu=zoom_menu)
     root.config(menu=menubar)
+
+    c.bind("<Button-1>", mouse_click)
+
+def mouse_click(event):
+    x = c.canvasx(event.x)
+    y = c.canvasy(event.y)
+    modx = x % SCALE
+    mody = y % SCALE
+    lower_thresh = int(.2 * SCALE)
+    upper_thresh = SCALE - int(.2 * SCALE)
+
+    if modx < lower_thresh:
+        x = x - modx
+    elif modx > upper_thresh:
+        x = x + (SCALE - modx)
+    else:
+        return
+
+    if mody < lower_thresh:
+        y = y - mody
+    elif mody > upper_thresh:
+        y = y + (SCALE - mody)
+    else:
+        return
+
+    offset = int(SCALE / 5)
+    c.create_oval(x - offset,
+                  y + offset,
+                  x + offset,
+                  y - offset,
+                  fill='white')
+
+
+    print(x)
+    print(y)
 
 # Scale a number for the canvas
 def scale(x):
@@ -148,18 +205,34 @@ def choose_endpoints():
     end = (e1, e2)
     return (start, end)
 
-# TODO: Mike is working on this
+def do_draw(p1, p2):
+    pass
+
+def draw_path(path):
+    for i in range(len(path) - 1):
+        p1 = path[i]
+        p2 = path[i + 1]
+        c.create_line([(scale(p1[0]), scale(p1[1])), (scale(p2[0]), scale(p2[1]))], fill='red', width=3)
+
 def zoom_out():
     global SCALE
+    if SCALE <= MIN_SCALE:
+        return
+
+    c.delete("all")
     SCALE = SCALE / 2
-    create_grid()
+    create_grid((0,0), (0,1))
     print("zoomed out")
 
-# TODO: Mike is working on this
+#TODO: Scroll doesn't cover whole canvas; dots move to 0,0
 def zoom_in():
     global SCALE
+    if SCALE >= MAX_SCALE:
+        return
+
+    c.delete("all")
     SCALE = SCALE * 2
-    create_grid()
+    create_grid((0,0), (0,1))
     print("zoomed in")
 
 if __name__ == "__main__":
@@ -187,4 +260,6 @@ if __name__ == "__main__":
 
         init_graph(g_nodes)
         create_grid(start, end)
+    path = a_star(start, end, edges)
+    draw_path(path)
     root.mainloop() # Startup UI
