@@ -9,6 +9,9 @@ class Node():
     def __init__(self, x, y, blocked):
         self.x = x
         self.y = y
+        self.g = 0
+        self.h = 0
+        self.f = 0
         self.blocked = blocked
 
 # Edge

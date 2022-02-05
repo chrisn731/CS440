@@ -23,7 +23,7 @@ def update_vertex(s, e, cost_so_far, parent, edge: Edge, fringe: PriorityQueue, 
         parent[e] = s
         fringe.put((cost_so_far[e] + heuristic(e, goal), e))
 
-def a_star(window, start, goal, edges):
+def a_star(window, start, goal, nodes, edges):
     print("Start: " + str(start))
     print("Goal: " + str(goal))
     fringe = PriorityQueue() # [(f, (x, y))]
@@ -41,6 +41,14 @@ def a_star(window, start, goal, edges):
         s = t[1]
 
         if s == goal:
+            for i in range(len(nodes)):
+                for j in range(len(nodes[i])):
+                    if (i, j) in cost_so_far:
+                        nodes[i][j].g = cost_so_far[(i,j)]
+                    else:
+                        nodes[i][j].g = 0
+                    nodes[i][j].h = heuristic((i,j), goal)
+                    nodes[i][j].f = nodes[i][j].h + nodes[i][j].g
             print("Path Found with cost: " + str(t[0]))
             curr = s
             p = parent[s]

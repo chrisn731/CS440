@@ -15,6 +15,11 @@ class Window():
         self.MAX_SCALE = 100
         self.selected = None
         self.selected_widget = None
+        self.label_x = None
+        self.label_y = None
+        self.label_g = None
+        self.label_h = None
+        self.label_f = None
         self.init_window()
 
     def init_window(self):
@@ -27,15 +32,18 @@ class Window():
         #Set up topbar
         topbar = tk.Frame(self.root, width = self.scale(self.WIDTH), height = 20)
         topbar.pack(fill=tk.BOTH, expand=True)
-        label_x = tk.Label(topbar, text="X: ")
-        label_x.grid(row=0, column=0)
-        button1 = tk.Text(topbar, width=5, height=1)
-        button1.grid(row=0, column=1)
-        label_y = tk.Label(topbar, text="Y: ")
-        label_y.grid(row=0, column=2)
-        button2 = tk.Text(topbar, width=5, height=1)
-        button2.grid(row=0, column=3)
-
+        label_cell = tk.Label(topbar, text="Selected node: ")
+        label_cell.grid(row=0, column=0)
+        self.label_x = tk.Label(topbar, text="(x, ")
+        self.label_x.grid(row=0, column=1)
+        self.label_y = tk.Label(topbar, text="y)")
+        self.label_y.grid(row=0, column=2)
+        self.label_g = tk.Label(topbar, text="g: ")
+        self.label_g.grid(row=0, column=3)
+        self.label_h = tk.Label(topbar, text="h: ")
+        self.label_h.grid(row=0, column=4)
+        self.label_f = tk.Label(topbar, text="f: ")
+        self.label_f.grid(row=0, column=5)
         #Sets up a canvas and scrollbars inside of a frame
         frame = tk.Frame(self.root, width = self.scale(self.WIDTH), height = self.scale(self.HEIGHT))
         frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
@@ -67,6 +75,7 @@ class Window():
         return x * self.SCALE
 
     def draw_graph(self, graph):
+        self.graph = graph
         start = graph.src
         end = graph.dst
         # Draw the blocked cells
@@ -124,7 +133,6 @@ class Window():
         else:
             return
 
-        self.selected = (x, y)
         offset = int(self.SCALE / 5)
         self.c.delete(self.selected_widget)
         self.selected_widget = self.c.create_oval(x - offset,
@@ -132,7 +140,20 @@ class Window():
                       x + offset,
                       y - offset,
                       fill='white')
-        print(self.selected)
+        x = int(x / 25)
+        y = int(y / 25)
+
+        self.label_x.config(text="(" + str(x) + ",")
+        self.label_y.config(text=str(y) + ")")
+        self.label_g.config(text="g: " + str(self.graph.nodes[x][y].g))
+        self.label_h.config(text="h: " + str(self.graph.nodes[x][y].h))
+        self.label_f.config(text="f: " + str(self.graph.nodes[x][y].f))
+        print(self.graph.nodes[x][y].g)
+        print(self.graph.nodes[x][y].h)
+        print(self.graph.nodes[x][y].f)
+        x0 = self.c.canvasx(0)
+        y0 = self.c.canvasy(0)
+        #print("Visible region: (" + str(x0) + ", " + str(y0) + "), (" + str(x0 + self.c.winfo_width()) + ", " + str(y0 + self.c.winfo_height()) + ")")
 
     def __raise_ends(self):
         self.c.tag_raise(self.start)
@@ -140,6 +161,14 @@ class Window():
 
     def __draw_line(self, p1, p2, fill, width):
         self.c.create_line([(self.scale(p1[0]), self.scale(p1[1])), (self.scale(p2[0]), self.scale(p2[1]))], fill=fill, width=width)
+        if self.scale(p1[0]) < self.c.canvasx(0):
+            self.c.xview_moveto((self.c.canvasx(0) - self.SCALE) / self.scale(self.WIDTH))
+        if self.scale(p1[1]) < self.c.canvasy(0):
+            self.c.yview_moveto((self.c.canvasy(0) - self.SCALE) / self.scale(self.HEIGHT))
+        if self.scale(p2[0]) > (self.c.canvasx(0) + self.c.winfo_width()):
+            self.c.xview_moveto((self.c.canvasx(0) + self.SCALE) / self.scale(self.WIDTH))
+        if self.scale(p2[1]) > (self.c.canvasy(0) + self.c.winfo_height()):
+            self.c.yview_moveto((self.c.canvasy(0) + self.SCALE) / self.scale(self.HEIGHT))
 
     def draw_line(self, p1, p2):
         self.c.after(self.delay, self.__draw_line, p1, p2, '#5c9aff', 1.5)
