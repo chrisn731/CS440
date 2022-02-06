@@ -1,4 +1,5 @@
 import math
+
 # Node
 # Holds information about the status of a node.
 # Nodes exist on the corners of "cells".
@@ -74,9 +75,9 @@ class GridGraph():
     def read_file(self, fi):
         with open(fi, 'r') as f:
             line = f.readline().strip().split()
-            self.src = (int(line[0]), int(line[1])) # Get the start point
+            self.src = (int(line[0]) - 1, int(line[1]) - 1) # Get the start point
             line = f.readline().strip().split()
-            self.dst = (int(line[0]), int(line[1])) # Get the end point
+            self.dst = (int(line[0]) - 1, int(line[1]) - 1) # Get the end point
             line = f.readline().strip().split()
             self.width = int(line[0])
             self.height = int(line[1])
@@ -85,6 +86,6 @@ class GridGraph():
             cells = dict()
             for line in f.readlines():
                 split = line.strip().split()
-                cells[(int(split[0]), int(split[1]))] = int(split[2])
+                cells[(int(split[0]) - 1, int(split[1]) - 1)] = int(split[2])
 
             self.init_graph(cells)

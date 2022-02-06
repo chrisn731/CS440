@@ -1,8 +1,8 @@
 import random
+import shutil
+import os
 
-# TODO: Have this script create 50 different graph files?
-
-nodes = dict()
+GRAPH_DIR = "./graphs/" # Name of the directory to create
 range_x = 100 # How large the X-axis will be
 range_y = 50 # How large the Y-axis will be
 BLOCKED_PERCENT = .1 # Fraction of the cells to be blocked
@@ -11,25 +11,25 @@ BLOCKED_PERCENT = .1 # Fraction of the cells to be blocked
 # This also ensures that the points will reside on a valid cell.
 # More specifically, ensures that a point can not spawn in the middle
 # of some blocked cells.
-def gen_endpoints():
+def gen_endpoints(nodes):
     while True:
         s1 = random.randrange(range_x)
         s2 = random.randrange(range_y)
         start = (s1, s2)
-        if valid_endpoint(start):
+        if valid_endpoint(start, nodes):
             break
 
     while True:
         e1 = random.randrange(range_x)
         e2 = random.randrange(range_y)
         end = (e1, e2)
-        if valid_endpoint(end):
+        if valid_endpoint(end, nodes):
             break
 
     return (start, end)
 
 # Checks that a point is not in an area of blocked cells
-def valid_endpoint(p):
+def valid_endpoint(p, nodes):
     s1 = p[0]
     s2 = p[1]
     
@@ -49,7 +49,7 @@ def valid_endpoint(p):
 
 # Generate the cells for the graph.
 # It creates both open and blocked cells.
-def gen_cells():
+def gen_cells(nodes):
     for x in range(range_x):
         for y in range(range_y):
             nodes[(x,y)] = True
@@ -64,16 +64,36 @@ def gen_cells():
             num_blocked += 1
             perc_blocked = float(num_blocked / (range_x * range_y))
 
-# Important! Make sure to generate our cells BEFORE we generate endpoints
-gen_cells()
-endpoints = gen_endpoints()
-with open("graph.txt", 'w') as f:
-    f.write(str(endpoints[0][0]) + " " + str(endpoints[0][1]) + "\n")
-    f.write(str(endpoints[1][0]) + " " + str(endpoints[1][1]) + "\n")
-    f.write(str(range_x) + " " + str(range_y) + "\n")
-    for x in range(range_x):
-        for y in range(range_y):
-            blocked = 0
-            if nodes[(x,y)] is False:
-                blocked = 1
-            f.write(str(x) + " " + str(y) + " " + str(blocked) + "\n")
+# Wipe out the currently existing graphs if it exists
+graphs_path = os.path.join(os.getcwd(), GRAPH_DIR)
+if os.path.exists(graphs_path):
+    try:
+        shutil.rmtree(graphs_path)
+    except OSError as e:
+        print("Error removing (%s): %s" % (graphs_path, e.strerror))
+
+# Create the graphs directory
+try:
+    os.mkdir(graphs_path)
+except OSError as e:
+    if not os.path.exists(graphs_path):
+        print("Error creating graph directory!")
+        print("Error: %s" % (e.strerror))
+        exit(1)
+
+# Begin generating our graph files
+for i in range(50):
+    nodes = dict()
+    graph_fname = graphs_path + "graph" + str(i) + ".txt"
+    gen_cells(nodes)
+    endpoints = gen_endpoints(nodes)
+    with open(graph_fname, 'w') as f:
+        f.write(str(endpoints[0][0] + 1) + " " + str(endpoints[0][1] + 1) + "\n")
+        f.write(str(endpoints[1][0] + 1) + " " + str(endpoints[1][1] + 1) + "\n")
+        f.write(str(range_x) + " " + str(range_y) + "\n")
+        for x in range(range_x):
+            for y in range(range_y):
+                blocked = 0
+                if nodes[(x,y)] is False:
+                    blocked = 1
+                f.write(str(x + 1) + " " + str(y + 1) + " " + str(blocked) + "\n")
