@@ -89,6 +89,7 @@ def theta_star(window, start, goal, nodes, edges):
     closed = []
     cost_so_far = dict()
     parent = dict()
+    answer = []
 
     cost_so_far[start] = 0
     parent[start] = start
@@ -99,7 +100,14 @@ def theta_star(window, start, goal, nodes, edges):
         s = t[1]
 
         if s == goal:
-            answer = []
+            for i in range(len(nodes)):
+                for j in range(len(nodes[i])):
+                    if (i, j) in cost_so_far:
+                        nodes[i][j].g = cost_so_far[(i,j)]
+                    else:
+                        nodes[i][j].g = 0
+                    nodes[i][j].h = heuristic((i,j), goal)
+                    nodes[i][j].f = nodes[i][j].h + nodes[i][j].g
             print("Path Found with cost: " + str(t[0]))
             curr = s
             p = parent[s]
@@ -113,7 +121,7 @@ def theta_star(window, start, goal, nodes, edges):
             answer.append(curr)
             answer.append(p)
             print(answer)
-            return answer
+            break
 
         closed.append(s)
         for i in range(-1, 2):
@@ -139,4 +147,6 @@ def theta_star(window, start, goal, nodes, edges):
                 update_vertex(s, end, cost_so_far, parent, nodes, edge, fringe, goal)
                 window.draw_line(s, end)
 
-    print("No path found")
+    if len(answer) == 0:
+        print("No path found")
+    return answer

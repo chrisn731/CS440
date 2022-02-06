@@ -30,13 +30,13 @@ def a_star(window, start, goal, nodes, edges):
     closed = []
     cost_so_far = dict()
     parent = dict()
+    answer = []
 
     cost_so_far[start] = 0
     parent[start] = start
     fringe.put((0, start))
 
     while not fringe.empty():
-        answer = []
         t = fringe.get()
         s = t[1]
 
@@ -62,7 +62,7 @@ def a_star(window, start, goal, nodes, edges):
             answer.append(curr)
             answer.append(p)
             print(answer)
-            return answer
+            break
 
         closed.append(s)
         for i in range(-1, 2):
@@ -88,4 +88,6 @@ def a_star(window, start, goal, nodes, edges):
                 update_vertex(s, end, cost_so_far, parent, edge, fringe, goal)
                 window.draw_line(s, end)
 
-    print("No path found")
+    if len(answer) == 0:
+        print("No path found")
+    return answer
