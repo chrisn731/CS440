@@ -30,7 +30,8 @@ def get_edge(s, e, edges):
 def heuristic(s, goal):
     x = min(abs(s[0] - goal[0]), abs(s[1] - goal[1]))
     y = max(abs(s[0] - goal[0]), abs(s[1] - goal[1]))
-    return math.sqrt(2) * x + y - x
+    #return math.sqrt(2) * x + y - x
+    return distance(s, goal)
 
 def line_of_sight(s, e, nodes):
     x0 = s[0]

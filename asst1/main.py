@@ -7,7 +7,7 @@ import time
 
 if len(sys.argv) != 2:
     print("Usage: python main.py [graph_path_name]")
-    print("Example: python main.py graphs/graph21.txt")
+    print("Example: python main.py 'graphs/graph21.txt'")
     exit(1)
 
 win = window.Window(1600, 900)
