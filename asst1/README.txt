@@ -28,7 +28,8 @@ How to use
 	* Once ran, a GUI will appear that will have 2 nodes highlighted
 		i) The green highlighted node represents the starting point.
 		ii) The red highlighted node represents the ending point.
-	* Following, a large amount of blue lines will be drawn that visualize the paths that are being explored.
+	* From the 'Alogrithms' drop-down menu, the user can select A* or Theta*
+	* Upon selecting an algorithm, a large amount of blue lines will be drawn that visualize the paths that are being explored.
 	* After all the explored paths have been displayed... the lowest cost path will be displayed in red.
 	* You can then click on different nodes in the graph to check their g(s), h(s), and f(s) values.
 		i) These values will be displayed in the top bar of the GUI.

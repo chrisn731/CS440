@@ -1,4 +1,6 @@
 import tkinter as tk
+import a_star
+import theta_star
 
 class Window():
     DELAY_INC = 10
@@ -13,13 +15,14 @@ class Window():
         self.SCALE = 25  # Scale factor for the elements to show properly on the canvas
         self.MIN_SCALE = 25
         self.MAX_SCALE = 100
-        self.selected = None
         self.selected_widget = None
+        self.topbar = None
         self.label_x = None
         self.label_y = None
         self.label_g = None
         self.label_h = None
         self.label_f = None
+        self.jobs = []
         self.init_window()
 
     def init_window(self):
@@ -30,20 +33,21 @@ class Window():
         self.root.title("Path Finding")
 
         #Set up topbar
-        topbar = tk.Frame(self.root, width = self.scale(self.WIDTH), height = 20)
-        topbar.pack(fill=tk.BOTH, expand=True)
-        label_cell = tk.Label(topbar, text="Selected node: ")
+        self.topbar = tk.Frame(self.root, width = self.scale(self.WIDTH), height = 20)
+        self.topbar.pack(fill=tk.BOTH, expand=True, padx=10, pady=(10,0))
+        label_cell = tk.Label(self.topbar, text="Selected node: ")
         label_cell.grid(row=0, column=0)
-        self.label_x = tk.Label(topbar, text="(x, ")
+        self.label_x = tk.Label(self.topbar, text="N/A")
         self.label_x.grid(row=0, column=1)
-        self.label_y = tk.Label(topbar, text="y)")
+        self.label_y = tk.Label(self.topbar, text="")
         self.label_y.grid(row=0, column=2)
-        self.label_g = tk.Label(topbar, text="g: ")
-        self.label_g.grid(row=0, column=3)
-        self.label_h = tk.Label(topbar, text="h: ")
-        self.label_h.grid(row=0, column=4)
-        self.label_f = tk.Label(topbar, text="f: ")
-        self.label_f.grid(row=0, column=5)
+        self.label_g = tk.Label(self.topbar, text="")
+        self.label_g.grid(row=0, column=3, padx=(10,0))
+        self.label_h = tk.Label(self.topbar, text="")
+        self.label_h.grid(row=0, column=4, padx=(10,0))
+        self.label_f = tk.Label(self.topbar, text="")
+        self.label_f.grid(row=0, column=5, padx=(10,0))
+
         #Sets up a canvas and scrollbars inside of a frame
         frame = tk.Frame(self.root, width = self.scale(self.WIDTH), height = self.scale(self.HEIGHT))
         frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
@@ -64,12 +68,40 @@ class Window():
 
         menubar = tk.Menu(self.root)
         algorithms_menu = tk.Menu(menubar, tearoff=0)
-        algorithms_menu.add_command(label="A*")
-        algorithms_menu.add_command(label="Theta*")
+        algorithms_menu.add_command(label="A*", command=self.__do_a_star)
+        algorithms_menu.add_command(label="Theta*", command=self.__do_theta_star)
         menubar.add_cascade(label="Algorithms", menu=algorithms_menu)
         self.root.config(menu=menubar)
 
         self.c.bind("<Button-1>", self.mouse_click)
+
+    def __do_a_star(self):
+        self.reset_grid()
+        res = a_star.a_star(self, self.graph.src, self.graph.dst, self.graph.nodes, self.graph.edges)
+        res.reverse()
+        self.draw_path(res)
+
+    def __do_theta_star(self):
+        self.reset_grid()
+        res = theta_star.theta_star(self, self.graph.src, self.graph.dst, self.graph.nodes, self.graph.edges)
+        res.reverse()
+        self.draw_path(res)
+
+    def reset_grid(self):
+        self.c.delete("path")
+        self.c.delete(self.selected_widget)
+        self.reset_topbar()
+        for job in self.jobs:
+            self.c.after_cancel(job)
+        self.jobs = []
+        self.delay = 0
+
+    def reset_topbar(self):
+        self.label_x.config(text="N/A")
+        self.label_y.config(text="")
+        self.label_g.config(text="")
+        self.label_h.config(text="")
+        self.label_f.config(text="")
 
     def scale(self, x):
         return x * self.SCALE
@@ -140,27 +172,34 @@ class Window():
                       x + offset,
                       y - offset,
                       fill='white')
-        x = int(x / 25)
-        y = int(y / 25)
 
-        self.label_x.config(text="(" + str(x) + ",")
-        self.label_y.config(text=str(y) + ")")
-        self.label_g.config(text="g: " + str(self.graph.nodes[x][y].g))
-        self.label_h.config(text="h: " + str(self.graph.nodes[x][y].h))
-        self.label_f.config(text="f: " + str(self.graph.nodes[x][y].f))
-        print(self.graph.nodes[x][y].g)
-        print(self.graph.nodes[x][y].h)
-        print(self.graph.nodes[x][y].f)
+        x = int(x / self.SCALE)
+        y = int(y / self.SCALE)
+
+        self.label_x.config(text="(" + str(x + 1) + ",")
+        self.label_y.config(text=str(y + 1) + ")")
+        self.__set_g(self.graph.nodes[x][y].g)
+        self.__set_h(self.graph.nodes[x][y].h)
+        self.__set_f(self.graph.nodes[x][y].f)
         x0 = self.c.canvasx(0)
         y0 = self.c.canvasy(0)
         #print("Visible region: (" + str(x0) + ", " + str(y0) + "), (" + str(x0 + self.c.winfo_width()) + ", " + str(y0 + self.c.winfo_height()) + ")")
+
+    def __set_g(self, g):
+        self.label_g.config(text="g = " + str(g))
+
+    def __set_h(self, h):
+        self.label_h.config(text="h = " + str(h))
+
+    def __set_f(self, f):
+        self.label_f.config(text="f = " + str(f))
 
     def __raise_ends(self):
         self.c.tag_raise(self.start)
         self.c.tag_raise(self.end)
 
     def __draw_line(self, p1, p2, fill, width):
-        self.c.create_line([(self.scale(p1[0]), self.scale(p1[1])), (self.scale(p2[0]), self.scale(p2[1]))], fill=fill, width=width)
+        self.c.create_line([(self.scale(p1[0]), self.scale(p1[1])), (self.scale(p2[0]), self.scale(p2[1]))], fill=fill, width=width, tags=("path"))
         if self.scale(p1[0]) < self.c.canvasx(0):
             self.c.xview_moveto((self.c.canvasx(0) - self.SCALE) / self.scale(self.WIDTH))
         if self.scale(p1[1]) < self.c.canvasy(0):
@@ -171,7 +210,7 @@ class Window():
             self.c.yview_moveto((self.c.canvasy(0) + self.SCALE) / self.scale(self.HEIGHT))
 
     def draw_line(self, p1, p2):
-        self.c.after(self.delay, self.__draw_line, p1, p2, '#5c9aff', 1.5)
+        self.jobs.append(self.c.after(self.delay, self.__draw_line, p1, p2, '#5c9aff', 1.5))
         self.delay += Window.DELAY_INC
 
     def draw_path(self, path):
@@ -179,9 +218,10 @@ class Window():
         for i in range(len(path) - 1):
             p1 = path[i]
             p2 = path[i + 1]
-            self.c.after(self.delay, self.__draw_line, p1, p2, 'red', 3)
+            self.jobs.append(self.c.after(self.delay, self.__draw_line, p1, p2, 'red', 3))
             self.delay += Window.DELAY_INC
             #self.c.create_line([(scale(p1[0]), scale(p1[1])), (scale(p2[0]), scale(p2[1]))], fill='red', width=3)
+        self.c.after(self.delay, self.__raise_ends)
 
     def run(self):
         self.c.after(self.delay, self.__raise_ends)

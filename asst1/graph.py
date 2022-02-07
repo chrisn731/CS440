@@ -72,6 +72,11 @@ class GridGraph():
                     elif y > 0 and (self.nodes[x][y-1].blocked == 0 or self.nodes[x][y].blocked == 0):
                         self.edges[((x,y),(x+1, y))] = Edge((x,y), (x+1, y), 1)
 
+    def has_solution(self):
+        if not bfs(self.src, self.dst, self.edges):
+            return False
+        return True
+
     def read_file(self, fi):
         with open(fi, 'r') as f:
             line = f.readline().strip().split()

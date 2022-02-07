@@ -1,5 +1,5 @@
 from queue import PriorityQueue
-from graph_ent import Edge
+from graph import Edge
 import math
 import window
 

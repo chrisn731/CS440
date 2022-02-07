@@ -1,5 +1,5 @@
 from queue import Queue
-from graph_ent import Edge
+from graph import Edge
 
 def get_edge(s, e, edges):
     if (s, e) in edges:
@@ -8,7 +8,7 @@ def get_edge(s, e, edges):
         return edges[e, s]
     else:
         return None
-        
+
 def bfs(start, goal, edges):
     print("Start: " + str(start))
     print("Goal: " + str(goal))
