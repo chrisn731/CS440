@@ -14,15 +14,4 @@ if len(sys.argv) != 2:
 win = window.Window(1600, 900)
 G = graph.GridGraph(sys.argv[1])
 win.draw_graph(G)
-
-"""
-if bfs(G.src, G.dst, G.edges):
-    start = time.time()
-    res = theta_star.theta_star(win, G.src, G.dst, G.nodes, G.edges)
-    #res = a_star.a_star(win, G.src, G.dst, G.nodes, G.edges)
-    end = time.time()
-    print("Found an answer in " + str(end - start) + " seconds!")
-    res.reverse()
-    win.draw_path(res)
-"""
 win.run()

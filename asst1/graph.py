@@ -1,4 +1,5 @@
 import math
+from bfs import bfs
 
 # Node
 # Holds information about the status of a node.
@@ -27,6 +28,28 @@ class Edge():
         self.weight = weight
 
 class GridGraph():
+    """
+    A class used to represent the underlying 8-neighbor vertex graph.
+
+    nodes : List
+        List of nodes on the graph
+    edges : dict
+        Dictionary that holds every edge connection on the graph.
+        The key to the dictionary is a start and end point (p1, p2) where p1 and p2 are tuples.
+        Therefore, the expanded key looks like this: ((x0, y0), (x1, y1)).
+    width : int
+        Holds the width of the graph
+    height : int
+        Holds the height of the graph
+    src : Tuple
+        x, y coordinate tuple of the starting node
+    dst : Tuple
+        x, y coordinate tuple of the goal node
+    solution_available : bool
+        Cached result of a Best-First Search of a path from the start to the goal.
+        This is kept here just so we do not have to run BFS each time we want to run out algorithms.
+    """
+
     def __init__(self, f):
         self.nodes = []
         self.edges = dict()
@@ -35,6 +58,7 @@ class GridGraph():
         self.src = None
         self.dst = None
         self.read_file(f)
+        self.solution_available = bfs(self.src, self.dst, self.edges)
 
     def init_graph(self, cells):
         for x in range(self.width + 1):
@@ -73,9 +97,7 @@ class GridGraph():
                         self.edges[((x,y),(x+1, y))] = Edge((x,y), (x+1, y), 1)
 
     def has_solution(self):
-        if not bfs(self.src, self.dst, self.edges):
-            return False
-        return True
+        return self.solution_available
 
     def read_file(self, fi):
         with open(fi, 'r') as f:

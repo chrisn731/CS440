@@ -3,6 +3,52 @@ import a_star
 import theta_star
 
 class Window():
+    """
+    This class represents the Tkinter window.
+    
+    delay : int
+        The delay as which to draw the next object
+    x : int
+        X dimension of the window
+    y : int
+        Y dimension of the window
+    root : tk.Tk
+        The "root" of the window. 
+    c : tk.Canvas
+        The canvas on which we draw the grid lines and such
+    WIDTH : int
+        --
+    HEIGHT : int
+        --
+    SCALE : int
+        How many pixels to scale everything on the canvas.
+        Mainly so everything is not tiny.
+    MIN_SCALE : int
+        The minimum amount to scale the elements on the canvas when zooming out.
+    MAX_SCALE : int
+        The maximum amount to scale the elements on the canvas when zooming in.
+    selected_widget : int
+        The object id of the currently selected object when clicking on the canvas.
+    topbar : tk.Frame
+        The frame contained inside the window that will be used to present graph information.
+    label_x : tk.Label
+        Label that is located inside the frame. Presents the user the x value of the selected
+        vertex.
+    label_y : tk.Label
+        Label that is located inside the frame. Presents the user the y value of the selected
+        vertex.
+    label_g : tk.Label
+        Label that is located inside the frame. Presents the user the g(s) value of the selected
+        vertex.
+    label_h : tk.Label
+        Label that is located inside the frame. Presents the user the h(s) value of the selected
+        vertex.
+    label_f : tk.Label
+        Label that is located inside the frame. Presents the user the f(s) value of the selected
+        vertex.
+    jobs : List
+        List of currently queued elements to draw.
+    """
     DELAY_INC = 10
     def __init__(self, x, y):
         self.delay = 0
@@ -76,12 +122,18 @@ class Window():
         self.c.bind("<Button-1>", self.mouse_click)
 
     def __do_a_star(self):
+        if not self.graph.has_solution():
+            print("There is no solution for this graph!")
+            return
         self.reset_grid()
         res = a_star.a_star(self, self.graph.src, self.graph.dst, self.graph.nodes, self.graph.edges)
         res.reverse()
         self.draw_path(res)
 
     def __do_theta_star(self):
+        if not self.graph.has_solution():
+            print("There is no solution for this graph!")
+            return
         self.reset_grid()
         res = theta_star.theta_star(self, self.graph.src, self.graph.dst, self.graph.nodes, self.graph.edges)
         res.reverse()

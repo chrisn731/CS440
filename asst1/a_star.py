@@ -81,6 +81,7 @@ def a_star(window, start, goal, nodes, edges):
                 for element in fringe.queue:
                     if element[1] == end:
                         is_new = False
+                        break
 
                 if is_new:
                     cost_so_far[end] = float('inf')

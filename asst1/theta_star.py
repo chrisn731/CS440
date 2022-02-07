@@ -4,6 +4,9 @@ import math
 def distance(p1, p2):
     return math.sqrt(((p1[0] - p2[0])**2) + ((p1[1] - p2[1])**2))
 
+def heuristic(s, goal):
+    return distance(s, goal)
+
 def update_vertex(s, e, cost_so_far, parent, nodes, edge, fringe, goal):
     if line_of_sight(parent[s], e, nodes):
         # We found a straight line from our parent to the destination
@@ -26,12 +29,6 @@ def get_edge(s, e, edges):
         return edges[e, s]
     else:
         return None
-
-def heuristic(s, goal):
-    x = min(abs(s[0] - goal[0]), abs(s[1] - goal[1]))
-    y = max(abs(s[0] - goal[0]), abs(s[1] - goal[1]))
-    #return math.sqrt(2) * x + y - x
-    return distance(s, goal)
 
 def line_of_sight(s, e, nodes):
     x0 = s[0]
@@ -141,6 +138,7 @@ def theta_star(window, start, goal, nodes, edges):
                 for element in fringe.queue:
                     if element[1] == end:
                         is_new = False
+                        break
 
                 if is_new:
                     cost_so_far[end] = float('inf')

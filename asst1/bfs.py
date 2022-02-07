@@ -1,5 +1,4 @@
 from queue import Queue
-from graph import Edge
 
 def get_edge(s, e, edges):
     if (s, e) in edges:
