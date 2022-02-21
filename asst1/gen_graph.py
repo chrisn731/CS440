@@ -32,7 +32,7 @@ def gen_endpoints(nodes):
 def valid_endpoint(p, nodes):
     s1 = p[0]
     s2 = p[1]
-    
+
     # If the point we chose belongs to a blocked cell we need to check...
     if nodes[(s1,s2)] == False:
         # Is the node to the left of us open?

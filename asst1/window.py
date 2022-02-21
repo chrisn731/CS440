@@ -5,7 +5,7 @@ import theta_star
 class Window():
     """
     This class represents the Tkinter window.
-    
+
     delay : int
         The delay as which to draw the next object
     x : int
@@ -13,7 +13,7 @@ class Window():
     y : int
         Y dimension of the window
     root : tk.Tk
-        The "root" of the window. 
+        The "root" of the window.
     c : tk.Canvas
         The canvas on which we draw the grid lines and such
     WIDTH : int
@@ -69,6 +69,7 @@ class Window():
         self.label_h = None
         self.label_f = None
         self.jobs = []
+        self.graph_type = 0
         self.init_window()
 
     def init_window(self):
@@ -117,9 +118,20 @@ class Window():
         algorithms_menu.add_command(label="A*", command=self.__do_a_star)
         algorithms_menu.add_command(label="Theta*", command=self.__do_theta_star)
         menubar.add_cascade(label="Algorithms", menu=algorithms_menu)
+        view_menu = tk.Menu(menubar, tearoff=0)
+        view_menu.add_command(label="Grid Graph", command=lambda: self.draw_graph(0))
+        view_menu.add_command(label="Visibility Graph", command=lambda: self.draw_graph(1))
+        menubar.add_cascade(label="View", menu=view_menu)
+        zoom_menu = tk.Menu(menubar, tearoff=0)
+        zoom_menu.add_command(label="In", command=lambda: self.zoom(True))
+        zoom_menu.add_command(label="Out", command=lambda: self.zoom(False))
+        menubar.add_cascade(label="Zoom", menu=zoom_menu)
         self.root.config(menu=menubar)
 
         self.c.bind("<Button-1>", self.mouse_click)
+
+    def set_graph(self, graph):
+        self.graph = graph
 
     def __do_a_star(self):
         if not self.graph.has_solution():
@@ -158,8 +170,11 @@ class Window():
     def scale(self, x):
         return x * self.SCALE
 
-    def draw_graph(self, graph):
-        self.graph = graph
+    # graph_type = 0 --> normal graph
+    # graph_type != 0 --> visibility graph
+    def draw_graph(self, graph_type):
+        self.c.delete('edge')
+        graph = self.graph
         start = graph.src
         end = graph.dst
         # Draw the blocked cells
@@ -171,29 +186,70 @@ class Window():
                                         self.scale(node.x + 1),
                                         self.scale(node.y + 1),
                                         fill='gray',
-                                        outline='')
+                                        outline='',
+                                        tags=("blocked"))
+
+        # Get the graph type
+        edges = []
+        if graph_type == 0:
+            self.graph_type = 0
+            edges = list(graph.edges.values())
+        else:
+            self.graph_type = 1
+            edges = list(graph.visibility_graph().values())
 
         # Draw the edges
-        for edge in graph.edges.values():
+        for edge in edges:
             p1 = edge.p1
             p2 = edge.p2
-            self.c.create_line([(self.scale(p1[0]), self.scale(p1[1])), (self.scale(p2[0]), self.scale(p2[1]))])
+            self.c.create_line([(self.scale(p1[0]), self.scale(p1[1])), (self.scale(p2[0]), self.scale(p2[1]))], tags=("edge"))
 
         offset = int(self.SCALE / 5)
 
         # Draw the start point
-        self.start = self.c.create_oval(self.scale(start[0]) - offset,
+        self.c.create_oval(self.scale(start[0]) - offset,
                       self.scale(start[1]) + offset,
                       self.scale(start[0]) + offset,
                       self.scale(start[1]) - offset,
-                      fill='green')
+                      fill='green',
+                      tag=("endpoint"))
 
         # Draw the end point
-        self.end = self.c.create_oval(self.scale(end[0]) - offset,
+        self.c.create_oval(self.scale(end[0]) - offset,
                       self.scale(end[1]) + offset,
                       self.scale(end[0]) + offset,
                       self.scale(end[1]) - offset,
-                      fill='red')
+                      fill='red',
+                      tag=("endpoint"))
+
+        self.__raise_all()
+
+    def zoom(self, zoom_in):
+        self.c.delete('edge')
+        self.c.delete('endpoint')
+        self.c.delete('blocked')
+        if zoom_in:
+            self.SCALE *= 2
+        else:
+            self.SCALE /= 2
+        self.c.delete('path')
+        self.draw_graph(self.graph_type)
+        self.c.config(scrollregion = (0, 0, self.scale(self.WIDTH), self.scale(self.HEIGHT)))
+
+    def draw_visibility_graph(self):
+        self.c.delete('all')
+        self.SCALE = 200
+        self.draw_graph()
+        self.c.delete('edge')
+        self.c.config(scrollregion = (0, 0, self.scale(self.WIDTH), self.scale(self.HEIGHT)))
+        edges = self.graph.visibility_graph()
+
+        for edge in edges.values():
+            p1 = edge.p1
+            p2 = edge.p2
+            self.c.create_line([(self.scale(p1[0]), self.scale(p1[1])), (self.scale(p2[0]), self.scale(p2[1]))], tags=("edge"))
+
+        self.__raise_all()
 
     def mouse_click(self, event):
         x = self.c.canvasx(event.x)
@@ -246,9 +302,9 @@ class Window():
     def __set_f(self, f):
         self.label_f.config(text="f = " + str(f))
 
-    def __raise_ends(self):
-        self.c.tag_raise(self.start)
-        self.c.tag_raise(self.end)
+    def __raise_all(self):
+        self.c.tag_raise('path')
+        self.c.tag_raise('endpoint')
 
     def __draw_line(self, p1, p2, fill, width):
         self.c.create_line([(self.scale(p1[0]), self.scale(p1[1])), (self.scale(p2[0]), self.scale(p2[1]))], fill=fill, width=width, tags=("path"))
@@ -273,8 +329,10 @@ class Window():
             self.jobs.append(self.c.after(self.delay, self.__draw_line, p1, p2, 'red', 3))
             self.delay += Window.DELAY_INC
             #self.c.create_line([(scale(p1[0]), scale(p1[1])), (scale(p2[0]), scale(p2[1]))], fill='red', width=3)
-        self.c.after(self.delay, self.__raise_ends)
+        self.c.after(self.delay, self.__raise_all)
 
     def run(self):
-        self.c.after(self.delay, self.__raise_ends)
+        self.draw_graph(0)
+        self.c.after(self.delay, self.__raise_all)
         self.root.mainloop()
+

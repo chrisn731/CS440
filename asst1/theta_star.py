@@ -75,7 +75,7 @@ def line_of_sight(s, e, nodes):
 
             if f != 0 and nodes[x0 + ((sx - 1)//2)][y0 + ((sy - 1)//2)].blocked:
                 return False
-            if dx == 0 and nodes[x0][y0 + ((sy - 1)//2)] and nodes[x0 - 1][y0 + ((sy - 1)//2)]:
+            if dx == 0 and nodes[x0][y0 + ((sy - 1)//2)].blocked and nodes[x0 - 1][y0 + ((sy - 1)//2)].blocked:
                 return False
             y0 += sy
     return True

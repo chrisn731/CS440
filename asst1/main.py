@@ -13,5 +13,5 @@ if len(sys.argv) != 2:
 
 win = window.Window(1600, 900)
 G = graph.GridGraph(sys.argv[1])
-win.draw_graph(G)
+win.set_graph(G)
 win.run()

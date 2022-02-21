@@ -35,6 +35,13 @@ How to use
 		i) These values will be displayed in the top bar of the GUI.
 	* The terminal will also display additional information such as how long it took for the path to be found.
 
+3. Visibility Graph
+	* Visibility Graph can be found under the View tab in the topbar.
+		-> NOTE: there is a slight delay when it is first generated.
+	* It is recommended to test the visualization graph on a small graph, such as the 4x2 graph found in the document. Using
+	  the visibility graph on the 100x50 grids creates a lot of visual clutter and requires significant zoom to actually
+	  see the lines.
+	* There is a zoom feature to make the display more clear.
 
 Other
 ========================================
