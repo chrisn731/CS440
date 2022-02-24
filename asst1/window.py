@@ -1,6 +1,7 @@
 import tkinter as tk
 import a_star
 import theta_star
+import time
 
 class Window():
     """
@@ -138,7 +139,9 @@ class Window():
             print("There is no solution for this graph!")
             return
         self.reset_grid()
+        start_time = time.time()
         res = a_star.a_star(self, self.graph.src, self.graph.dst, self.graph.nodes, self.graph.edges)
+        print(time.time() - start_time)
         res.reverse()
         self.draw_path(res)
 
@@ -147,7 +150,9 @@ class Window():
             print("There is no solution for this graph!")
             return
         self.reset_grid()
+        start_time = time.time()
         res = theta_star.theta_star(self, self.graph.src, self.graph.dst, self.graph.nodes, self.graph.edges)
+        print(time.time() - start_time)
         res.reverse()
         self.draw_path(res)
 

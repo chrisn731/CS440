@@ -15,6 +15,7 @@ class Node():
         self.h = 0
         self.f = 0
         self.blocked = blocked
+        self.closed = False
 
 # Edge
 # Holds information about an edge.

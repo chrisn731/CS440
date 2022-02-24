@@ -9,8 +9,8 @@ def get_edge(s, e, edges):
         return None
 
 def bfs(start, goal, edges):
-    print("Start: " + str(start))
-    print("Goal: " + str(goal))
+    #print("Start: " + str(start))
+    #print("Goal: " + str(goal))
     fringe = Queue()
     closed = []
 
@@ -19,7 +19,7 @@ def bfs(start, goal, edges):
         s = fringe.get()
 
         if s == goal:
-            print("Path found with BFS!")
+            #print("Path found with BFS!")
             return True
 
         closed.append(s)
