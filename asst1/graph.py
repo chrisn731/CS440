@@ -103,6 +103,7 @@ class GridGraph():
 
 
     def visibility_graph(self):
+        print("Calculating visibility graph. Please wait a moment...")
         if self.vedges:
             return self.vedges
 
@@ -113,7 +114,6 @@ class GridGraph():
             for j in range(len(self.nodes[i])):
                 if (i == self.src[0] and j == self.src[1]) or (i == self.dst[0] and j == self.dst[1]):
                     self.vnodes.append(self.nodes[i][j])
-                    print("START/END")
                 elif self.nodes[i][j].blocked == 1:
                     if i == len(self.nodes) - 1 or j == len(self.nodes[i]) - 1:
                         continue

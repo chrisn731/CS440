@@ -136,23 +136,25 @@ class Window():
 
     def __do_a_star(self):
         if not self.graph.has_solution():
-            print("There is no solution for this graph!")
+            print("There is no solution for this graph! (Validated by BFS)")
             return
+        print("Running A*...")
         self.reset_grid()
         start_time = time.time()
         res = a_star.a_star(self, self.graph.src, self.graph.dst, self.graph.nodes, self.graph.edges)
-        print(time.time() - start_time)
+        print("Done! Took: " + str(time.time() - start_time) + " seconds")
         res.reverse()
         self.draw_path(res)
 
     def __do_theta_star(self):
         if not self.graph.has_solution():
-            print("There is no solution for this graph!")
+            print("There is no solution for this graph! (Validated by BFS)")
             return
+        print("Running Theta*...")
         self.reset_grid()
         start_time = time.time()
         res = theta_star.theta_star(self, self.graph.src, self.graph.dst, self.graph.nodes, self.graph.edges)
-        print(time.time() - start_time)
+        print("Done! Took: " + str(time.time() - start_time) + " seconds")
         res.reverse()
         self.draw_path(res)
 

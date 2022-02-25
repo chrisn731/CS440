@@ -1,16 +1,14 @@
 from queue import Queue
 
+"""
+    A simple BFS implementation. Used only to ensure there is a path
+    before running A* or Theta*.
+"""
+
 def get_edge(s, e, edges):
-    if (s, e) in edges:
-        return edges[s, e]
-    elif (e, s) in edges:
-        return edges[e, s]
-    else:
-        return None
+    return edges.get((s, e), edges.get((e, s), None))
 
 def bfs(start, goal, edges):
-    #print("Start: " + str(start))
-    #print("Goal: " + str(goal))
     fringe = Queue()
     closed = []
 
@@ -19,7 +17,6 @@ def bfs(start, goal, edges):
         s = fringe.get()
 
         if s == goal:
-            #print("Path found with BFS!")
             return True
 
         closed.append(s)
@@ -36,5 +33,4 @@ def bfs(start, goal, edges):
                     continue
 
                 fringe.put(end)
-    print("No path found with BFS")
     return False
