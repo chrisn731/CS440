@@ -73,7 +73,7 @@ def gen_sequence(cells, width, height):
 
 if __name__ == '__main__':
     if len(sys.argv) != 2:
-        print("yo wtf you doing")
+        print("Bad usage!!!")
         exit(1)
 
     read_file(sys.argv[1])

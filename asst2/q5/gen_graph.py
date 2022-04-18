@@ -40,39 +40,40 @@ def gen_world():
     gen_cells(nodes)
     return nodes
 
-# Wipe out the currently existing graphs if it exists
-graphs_path = os.path.join(os.getcwd(), GRAPH_DIR)
-if os.path.exists(graphs_path):
+if __name__ == '__main__':
+    # Wipe out the currently existing graphs if it exists
+    graphs_path = os.path.join(os.getcwd(), GRAPH_DIR)
+    if os.path.exists(graphs_path):
+        try:
+            shutil.rmtree(graphs_path)
+        except OSError as e:
+            print("Error removing (%s): %s" % (graphs_path, e.strerror))
+
+    # Create the graphs directory
     try:
-        shutil.rmtree(graphs_path)
+        os.mkdir(graphs_path)
     except OSError as e:
-        print("Error removing (%s): %s" % (graphs_path, e.strerror))
+        if not os.path.exists(graphs_path):
+            print("Error creating graph directory!")
+            print("Error: %s" % (e.strerror))
+            exit(1)
 
-# Create the graphs directory
-try:
-    os.mkdir(graphs_path)
-except OSError as e:
-    if not os.path.exists(graphs_path):
-        print("Error creating graph directory!")
-        print("Error: %s" % (e.strerror))
-        exit(1)
+    # Begin generating our graph files
+    for i in range(1):
+        nodes = dict()
+        graph_fname = graphs_path + "graph" + str(i) + ".txt"
+        gen_cells(nodes)
+        with open(graph_fname, 'w') as f:
+            f.write(str(range_x) + " " + str(range_y) + "\n")
+            for x in range(range_x):
+                for y in range(range_y):
+                    if nodes[(x,y)] == Terrain.N:
+                        letter = 'N'
+                    elif nodes[(x,y)] == Terrain.H:
+                        letter = 'H'
+                    elif nodes[(x,y)] == Terrain.T:
+                        letter = 'T'
+                    else:
+                        letter = 'B'
 
-# Begin generating our graph files
-for i in range(1):
-    nodes = dict()
-    graph_fname = graphs_path + "graph" + str(i) + ".txt"
-    gen_cells(nodes)
-    with open(graph_fname, 'w') as f:
-        f.write(str(range_x) + " " + str(range_y) + "\n")
-        for x in range(range_x):
-            for y in range(range_y):
-                if nodes[(x,y)] == Terrain.N:
-                    letter = 'N'
-                elif nodes[(x,y)] == Terrain.H:
-                    letter = 'H'
-                elif nodes[(x,y)] == Terrain.T:
-                    letter = 'T'
-                else:
-                    letter = 'B'
-
-                f.write(str(x + 1) + " " + str(y + 1) + " " + str(letter) + "\n")
+                    f.write(str(x + 1) + " " + str(y + 1) + " " + str(letter) + "\n")
