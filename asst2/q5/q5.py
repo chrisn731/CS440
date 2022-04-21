@@ -2,7 +2,7 @@ import random
 import shutil
 import os
 from graph import Terrain
-from gen_graph import gen_world
+from gen_graph import gen_world, write_world
 from gen_actions import gen_sequence
 
 RESULT_DIR = "./results/"
@@ -18,9 +18,9 @@ def do_action(cells, src, action):
     deltax = 0
     deltay = 0
     if action == 'D':
-        deltay = -1
-    elif action == 'U':
         deltay = 1
+    elif action == 'U':
+        deltay = -1
     elif action == 'R':
         deltax = 1
     elif action == 'L':
@@ -78,6 +78,7 @@ def main():
 
     for i in range(WORLD_COUNT):
         cells = gen_world()
+        write_world("world" + str(i), cells)
         for j in range(ACTIONS_PER_WORLD):
             actions = gen_sequence(cells, 100, 50)
             src = actions[0]
