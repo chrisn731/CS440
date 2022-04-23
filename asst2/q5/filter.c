@@ -73,14 +73,18 @@ struct world_file_results {
 /* Convert character to respective type */
 static enum terrain_type char_to_type(char c)
 {
-	if (c == 'N')
+	switch (c) {
+	case 'N':
 		return N;
-	if (c == 'H')
+	case 'H':
 		return H;
-	if (c == 'T')
+	case 'T':
 		return T;
-	if (c == 'B')
+	case 'B':
 		return B;
+	default:
+		errx(-1, "Passed in bad value (%d) to %s\n", c, __func__);
+	}
 }
 
 static inline int is_valid_state(char c)
@@ -96,21 +100,27 @@ static inline int is_valid_action(char c)
 /* The change of x coordinate given an action */
 static inline int type_delta_x(char a)
 {
-	if (a == 'U')
+	switch (a) {
+	case 'U':
 		return -1;
-	if (a == 'D')
+	case 'D':
 		return 1;
-	return 0;
+	default:
+		return 0;
+	}
 }
 
 /* The change of y coordinate given an action */
 static inline int type_delta_y(char a)
 {
-	if (a == 'L')
+	switch (a) {
+	case 'L':
 		return -1;
-	if (a == 'R')
+	case 'R':
 		return 1;
-	return 0;
+	default:
+		return 0;
+	}
 }
 
 /*
