@@ -1,4 +1,5 @@
 #include <err.h>
+#include <float.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -12,8 +13,8 @@ static unsigned int num_rows = 3;
 static unsigned int num_cols = 3;
 static unsigned int size = 9;
 
-static const char *action = "LLLLLRRURDRLRRRDUDUDRDRLLRLRLDULDUDRURDUDLULUUDUDRRRRRURRLUDDLLULURDLLLDURLUDLUURLLDDLRURDRRLDRDDURL";
-static const char *sensor = "TNNNNNNNNTTTTNNTNTNNNTTTTTTTTHTTHTHTTTHTHNTHTTTTNNNNNNTNTNNNNTHNHNNNHNHNNNNNNNTNNNNNHNHHNNNNNNNTNTTT";
+static struct node **__world;
+static unsigned int num_unblocked;
 
 enum terrain_type {
 	N,
@@ -96,7 +97,7 @@ static struct world_file_results parse_world_file(const char *file)
 
 	fp = fopen(file, "r");
 	if (!fp)
-		err(1, "Error opening %s", file);
+		err(1, "C Error opening %s", file);
 
 	fgets(buf, 4096, fp);
 	start = buf;
@@ -150,9 +151,9 @@ static double *init_distr(int num_unblocked)
 	return distr;
 }
 
-static int in_bounds(int row, int col)
+static inline int in_bounds(int row, int col)
 {
-	return row > 0 && row < num_rows && col > 0 && col < num_cols;
+	return row >= 0 && row < num_rows && col >= 0 && col < num_cols;
 }
 
 struct trans_result {
@@ -165,21 +166,23 @@ struct trans_result {
 static struct trans_result transition(double *t, struct node **world,
 		struct node *c, char action)
 {
+	static int counter;
 	struct trans_result trans_result;
 	int destx, desty;
 
 	destx = c->x + type_delta_x(action);
-	destx = c->y + type_delta_y(action);
+	desty = c->y + type_delta_y(action);
 
 	if (!in_bounds(destx - 1, desty - 1) || world[destx - 1][desty - 1].type == B) {
-		t[(num_cols * (c->x - 1)) + (c->y - 1)] = 1.0;
+		//t[(num_cols * (c->x - 1)) + (c->y - 1)] = 1.0;
 		trans_result.res1 = 1.0;
 		trans_result.pos1 = (num_cols * (c->x - 1)) + (c->y - 1);
 		trans_result.res2 = 0.0;
 		trans_result.pos2 = 0;
+		//printf("so far: %d\n", ++counter);
 	} else {
-		t[(num_cols * (c->x - 1)) + (c->y - 1)] = PR_STAY;
-		t[(num_cols * (destx - 1)) + (desty - 1)] = PR_DO_MOVE;
+		//t[(num_cols * (c->x - 1)) + (c->y - 1)] = PR_STAY;
+		//t[(num_cols * (destx - 1)) + (desty - 1)] = PR_DO_MOVE;
 		trans_result.res1 = PR_STAY;
 		trans_result.pos1 = (num_cols * (c->x - 1)) + (c->y - 1);
 		trans_result.res2 = PR_DO_MOVE;
@@ -200,63 +203,80 @@ static void add_scaled_trans(struct trans_result *tr, double *sum)
 	sum[tr->pos2] += tr->res2;
 }
 
-static void do_filter(struct node **world, const char *state,
-		const char *action, double *prev)
+static void observation(struct node **world, double *obs, enum terrain_type sensed)
 {
-	double *summation, *trans_model, *ans;
-	int i, j, idx;
-
-	if (!state || !action || !*state || !*action)
-		return;
-
-	trans_model = calloc(size, sizeof(double));
-	ans = calloc(size, sizeof(double));
-	summation = calloc(size, sizeof(double));
+	int i;
 	for (i = 0; i < size; i++) {
-		struct node *prev_node = &world[i / num_cols][i % num_cols];
-
-		if (prev_node->type == B)
-			continue;
-
-		for (j = 0, idx = 0; j < size; j++, idx++) {
-			struct node *curr = &world[j / num_cols][j % num_cols];
-			struct trans_result tr = {0};
-
-			if (curr->type == B)
-				continue;
-			tr = transition(trans_model, world, curr, *action);
-			scalar_mult(&tr, prev[idx]);
-			add_scaled_trans(&tr, summation);
-		}
+		struct node *n = &world[i / num_cols][i % num_cols];
+		if (n->type == B)
+			obs[i] = 0.0;
+		else if (n->type == sensed)
+			obs[i] = PR_CORRECT_T;
+		else
+			obs[i] = PR_OTHER;
 	}
-	printf("[ ");
-	for (i = 0; i < size; i++) {
-		printf("%lf ", summation[i]);
-		if (summation[i] != 1.0f)
-			exit(1);
-	}
-	printf(" ]\n");
-
-	free(summation);
-	free(ans);
-	free(trans_model);
 }
 
-int main(int argc, char **argv)
+static void print_vector(double *p, unsigned long size)
+{
+	unsigned long i;
+
+	printf("[ ");
+	for (i = 0; i < size; i++)
+		printf("%g, ", p[i]);
+	printf(" ]\n");
+}
+
+static double *do_filter(struct node **world, const char state,
+		const char action, double *prev)
+{
+	double *summation, *trans_model, *obs, *normalized_factor;
+	double summ_res;
+	int i, j, idx;
+
+	if (!state || !action)
+		return NULL;
+
+	trans_model = calloc(size, sizeof(double));
+	obs = calloc(size, sizeof(double));
+	summation = calloc(size, sizeof(double));
+	normalized_factor = calloc(size, sizeof(double));
+	for (j = 0, idx = 0; j < size; j++, idx++) {
+		struct node *curr = &world[j / num_cols][j % num_cols];
+		struct trans_result tr = {0};
+
+		if (curr->type == B)
+			continue;
+		tr = transition(trans_model, world, curr, action);
+		scalar_mult(&tr, prev[idx]);
+		add_scaled_trans(&tr, summation);
+	}
+	observation(world, obs, char_to_type(state));
+	point_mult(summation, obs, size, size);
+	for (summ_res = 0, i = 0; i < size; i++)
+		summ_res += summation[i];
+	for (i = 0; i < size; i++)
+		normalized_factor[i] = 1.0 / summ_res;
+	point_mult(summation, normalized_factor, size, size);
+	free(obs);
+	free(trans_model);
+	free(normalized_factor);
+	return summation;
+}
+
+unsigned int load_world(const char *world_file)
 {
 	struct world_file_results ret;
-	const char *world_file, *ar_file;
-	double *p0_distr;
 
-	if (argc != 3)
-		errx(-1, "Wrong usage");
-
-	world_file = argv[1];
-	ar_file = argv[2];
 	ret = parse_world_file(world_file);
-	printf("%d\n", ret.num_unblocked);
-	p0_distr = init_distr(ret.num_unblocked);
-	do_filter(ret.nodes, sensor, action, p0_distr);
-	free(p0_distr);
-	return 0;
+	__world = ret.nodes;
+	num_unblocked = ret.num_unblocked;
+	return size;
+}
+
+double *filter_step(char sensor_data, char action, double *prev)
+{
+	if (!prev)
+		prev = init_distr(num_unblocked);
+	return do_filter(__world, sensor_data, action, prev);
 }
