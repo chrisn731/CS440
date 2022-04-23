@@ -1,5 +1,6 @@
 #include <err.h>
 #include <float.h>
+#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -87,7 +88,7 @@ static enum terrain_type char_to_type(char c)
 	}
 }
 
-static inline int is_valid_state(char c)
+static inline int is_valid_terrain_type(char c)
 {
 	return c == 'N' || c == 'H' || c == 'T' || c == 'B';
 }
@@ -139,7 +140,6 @@ static void point_mult(double *v1, double *v2, int v1_len, int v2_len)
 		for (i = 0; i < v2_len; i++)
 			v1[0] *= v2[i];
 	} else if (v2_len == 1) {
-		double *v1p = v1;
 		double v2_val = *v2;
 		for (i = 0; i < v1_len; i++)
 			*v1++ *= v2_val;
@@ -161,6 +161,7 @@ static struct world_file_results parse_world_file(const char *file)
 	FILE *fp;
 	char buf[4096];
 	char *start, *end;
+	unsigned int nodes_read = 0;
 	int i = 0, so_far = 0;
 
 	fp = fopen(file, "r");
@@ -172,13 +173,21 @@ static struct world_file_results parse_world_file(const char *file)
 	 * The first line should be like: "NUM_ROWS NUM_COLS" where they are
 	 * numbers.
 	 */
-	fgets(buf, 4096, fp);
+	if (!fgets(buf, sizeof(buf), fp))
+		err(1, "Failed to read first line of file for size. "
+			"Ensure file is correctly formatted.");
 	start = buf;
 	num_rows = strtol(start, &end, 10);
+	if (num_rows == LONG_MIN || num_rows == LONG_MAX || start == end)
+		err(1, "Failed to read in number of rows from file. "
+			"Contents of line:\n\t%s", buf);
 	start = end;
 	num_cols = strtol(start, &end, 10);
-	size = num_rows * num_cols;
+	if (num_cols == LONG_MIN || num_cols == LONG_MAX || start == end)
+		err(1, "Failed to read in number of columns from file. "
+			"Contents of line:\n\t%s", buf);
 
+	size = num_rows * num_cols;
 	world = malloc(sizeof(*world) * num_rows);
 	if (!world)
 		bad_malloc(sizeof(*world) * num_rows);
@@ -192,15 +201,26 @@ static struct world_file_results parse_world_file(const char *file)
 	 * where X is the x coordinate, Y is the y coordinate, and T
 	 * is the type of terrain at those coordinates.
 	 */
-	while (fgets(buf, 4096, fp)) {
+	while (fgets(buf, sizeof(buf), fp)) {
 		struct node *n = &row[i];
 		int row_num, col_num;
 		char type;
 		start = buf;
 		row_num = strtol(start, &end, 10);
+		if (row_num == LONG_MIN || row_num == LONG_MAX || start == end)
+			err(1, "Failed to read in x coordinate of node. "
+				"Contents of line:\n\t%s", buf);
 		start = end;
 		col_num = strtol(start, &end, 10);
+		if (col_num == LONG_MIN || col_num == LONG_MAX || start == end)
+			err(1, "Failed to read in y coordinate of node. "
+				"Contents of line:\n\t%s", buf);
+
 		type = *++end;
+		if (!is_valid_terrain_type(type))
+			errx(1, "Failed to retrieve valid terrain type from line. "
+				"Got %c (val: %d) from line:\n\t%s",
+				type, type, buf);
 
 		n->x = row_num;
 		n->y = col_num;
@@ -208,6 +228,7 @@ static struct world_file_results parse_world_file(const char *file)
 		if (n->type != B)
 			ret.num_unblocked++;
 		i++;
+		nodes_read++;
 
 		/*
 		 * If the number of lines so far is equal to the number of
@@ -222,6 +243,9 @@ static struct world_file_results parse_world_file(const char *file)
 			so_far = 0;
 		}
 	}
+	if (nodes_read != size)
+		errx(1, "Read only %u nodes, when file said to expect %d cells.",
+				nodes_read, size);
 	world = ret.nodes;
 	fclose(fp);
 	return ret;
@@ -359,7 +383,7 @@ static void print_vector(double *p, unsigned long size)
  * 	P(X_t-1 | E_1:t-1) - Previous model (Matrix of the probability
  * 		distribution from the previous iteration)
  */
-static double *do_filter(struct node **world, const char state,
+static double *do_filter(struct node **world, const char sensor,
 		const char action, double *prev)
 {
 	double *summation, *trans_model, *obs;
@@ -367,7 +391,7 @@ static double *do_filter(struct node **world, const char state,
 	int i;
 
 	/* Might want to actually throw some type of error for this if... */
-	if (!world || !prev || !is_valid_state(state) || !is_valid_action(action))
+	if (!world || !prev || !is_valid_terrain_type(sensor) || !is_valid_action(action))
 		return NULL;
 
 	/* Transition matrix */
@@ -403,7 +427,7 @@ static double *do_filter(struct node **world, const char state,
 		add_scaled_trans(&tr, summation);
 	}
 	/* P(E_t | X_t) */
-	observation(world, obs, char_to_type(state));
+	observation(world, obs, char_to_type(sensor));
 	/* P(E_t | X_t) * Summation result */
 	point_mult(summation, obs, size, size);
 
@@ -411,9 +435,9 @@ static double *do_filter(struct node **world, const char state,
 	alpha = 0;
 	for (i = 0; i < size; i++)
 		alpha += summation[i];
+	alpha = 1.0 / alpha;
 
 	/* Normalize the result */
-	alpha = 1.0 / alpha;
 	for (i = 0; i < size; i++)
 		summation[i] *= alpha;
 
