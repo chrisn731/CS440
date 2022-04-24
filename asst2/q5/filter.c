@@ -30,21 +30,6 @@
  */
 #define PR_OTHER 0.05
 
-static unsigned int num_rows = 3;
-static unsigned int num_cols = 3;
-
-/*
- * Size of the graph (number of nodes)
- * num_rows * num_cols
- */
-static unsigned int size = 9;
-
-/* The "world" denoted by a 2d array of cells */
-static struct node **__world;
-
-/* Number of unblocked cells in the world */
-static unsigned int num_unblocked;
-
 /* Type of the terrain */
 enum terrain_type {
 	N, /* Normal */
@@ -54,7 +39,7 @@ enum terrain_type {
 };
 
 /*
- * Node on the grid
+ * Node inside of the world.
  *
  * IMPORTANT NOTE: These x,y coordinates start at 1,1. This detail is why
  * some coordinate code has '-1' attached to it.
@@ -65,11 +50,28 @@ struct node {
 	enum terrain_type type;
 };
 
-/* Results from parsing a world file */
-struct world_file_results {
+struct world_data {
+	/* The "world" denoted by a 2d array of cells */
 	struct node **nodes;
-	int num_unblocked;
+
+	unsigned int num_rows;
+	unsigned int num_cols;
+
+	/*
+	 * Size of the graph (number of nodes)
+	 * num_rows * num_cols
+	 */
+	unsigned int size;
+
+	/* Number of unblocked cells in the world */
+	unsigned int num_unblocked_nodes;
+
+	/* If a world is currently loaded */
+	unsigned int loaded;
 };
+
+static struct world_data current_world;
+
 
 /* Convert character to respective type */
 static enum terrain_type char_to_type(char c)
@@ -154,14 +156,13 @@ static void point_mult(double *v1, double *v2, int v1_len, int v2_len)
 /*
  * Parse the world file
  */
-static struct world_file_results parse_world_file(const char *file)
+static void parse_world_file(const char *file)
 {
-	struct world_file_results ret = {0};
-	struct node **world, *row;
+	struct node **world, **world_nodes, *row;
 	FILE *fp;
 	char buf[4096];
 	char *start, *end;
-	unsigned int nodes_read = 0;
+	unsigned int nodes_read = 0, num_unblocked = 0, num_rows, num_cols;
 	int i = 0, so_far = 0;
 
 	fp = fopen(file, "r");
@@ -187,11 +188,10 @@ static struct world_file_results parse_world_file(const char *file)
 		err(1, "Failed to read in number of columns from file. "
 			"Contents of line:\n\t%s", buf);
 
-	size = num_rows * num_cols;
 	world = malloc(sizeof(*world) * num_rows);
 	if (!world)
 		bad_malloc(sizeof(*world) * num_rows);
-	ret.nodes = world;
+	world_nodes = world;
 	row = malloc(sizeof(*row) * num_cols);
 	if (!row)
 		bad_malloc(sizeof(*row) * num_cols);
@@ -226,7 +226,7 @@ static struct world_file_results parse_world_file(const char *file)
 		n->y = col_num;
 		n->type = char_to_type(type);
 		if (n->type != B)
-			ret.num_unblocked++;
+			num_unblocked++;
 		i++;
 		nodes_read++;
 
@@ -243,12 +243,16 @@ static struct world_file_results parse_world_file(const char *file)
 			so_far = 0;
 		}
 	}
-	if (nodes_read != size)
+	if (nodes_read != num_rows * num_cols)
 		errx(1, "Read only %u nodes, when file said to expect %d cells.",
-				nodes_read, size);
-	world = ret.nodes;
-	fclose(fp);
-	return ret;
+				nodes_read, num_rows * num_cols);
+	if (fclose(fp))
+		warn("Error closing world file! Be cautious opening more files.");
+	current_world.nodes = world_nodes;
+	current_world.num_rows = num_rows;
+	current_world.num_cols = num_cols;
+	current_world.size = num_rows * num_cols;
+	current_world.num_unblocked_nodes = num_unblocked;
 }
 
 /*
@@ -257,6 +261,7 @@ static struct world_file_results parse_world_file(const char *file)
 static double *init_distr(int num_unblocked)
 {
 	double *distr, val;
+	unsigned int size = current_world.size;
 	int i;
 
 	distr = malloc(sizeof(*distr) * size);
@@ -273,6 +278,8 @@ static double *init_distr(int num_unblocked)
  */
 static inline int in_bounds(int row, int col)
 {
+	unsigned int num_rows = current_world.num_rows;
+	unsigned int num_cols = current_world.num_cols;
 	return row >= 0 && row < num_rows && col >= 0 && col < num_cols;
 }
 
@@ -299,12 +306,14 @@ struct trans_result {
 static void transition(struct trans_result *tr, struct node **world,
 			struct node *c, char action)
 {
+	unsigned int num_cols = current_world.num_cols;
 	int destx, desty;
 
 	destx = c->x + type_delta_x(action);
 	desty = c->y + type_delta_y(action);
 
 	if (!in_bounds(destx - 1, desty - 1) || world[destx - 1][desty - 1].type == B) {
+		/* Our move keeps us in the same place */
 		tr->res1 = 1.0;
 		tr->pos1 = (num_cols * (c->x - 1)) + (c->y - 1);
 		tr->res2 = 0.0;
@@ -341,7 +350,10 @@ static void add_scaled_trans(struct trans_result *tr, double *sum)
  */
 static void observation(struct node **world, double *obs, enum terrain_type sensed)
 {
+	unsigned int size = current_world.size;
+	unsigned int num_cols = current_world.num_cols;
 	int i;
+
 	for (i = 0; i < size; i++) {
 		struct node *n = &world[i / num_cols][i % num_cols];
 		/* Blocked cells cant be observed */
@@ -388,6 +400,8 @@ static double *do_filter(struct node **world, const char sensor,
 {
 	double *summation, *trans_model, *obs;
 	double alpha;
+	unsigned int size = current_world.size;
+	unsigned int num_cols = current_world.num_cols;
 	int i;
 
 	/* Might want to actually throw some type of error for this if... */
@@ -447,18 +461,40 @@ static double *do_filter(struct node **world, const char sensor,
 }
 
 /*
+ * Unload the currently active world.
+ */
+static void unload_world(void)
+{
+	unsigned int num_rows = current_world.num_rows;
+	int i;
+
+	for (i = 0; i < num_rows; i++)
+		free(current_world.nodes[i]);
+	free(current_world.nodes);
+	current_world.loaded = 0;
+}
+
+/*
+ * A python entry point for it to release any malloc'd arrays that were
+ * returned to it from this C code.
+ */
+void free_buffer(void *buf)
+{
+	free(buf);
+}
+
+/*
  * Call point for python to load the world file.
  *
  * Returns the size of the world (num_rows * num_cols)
  */
 unsigned int load_world(const char *world_file)
 {
-	struct world_file_results ret;
-
-	ret = parse_world_file(world_file);
-	__world = ret.nodes;
-	num_unblocked = ret.num_unblocked;
-	return size;
+	if (current_world.loaded)
+		unload_world();
+	parse_world_file(world_file);
+	current_world.loaded = 1;
+	return current_world.size;
 }
 
 /*
@@ -468,9 +504,13 @@ unsigned int load_world(const char *world_file)
  */
 double *filter_step(char sensor_data, char action, double *prev)
 {
-	if (!__world)
+	double *res;
+
+	if (!current_world.loaded)
 		errx(1, "Call load_world() before trying to do filter_step!");
 	if (!prev)
-		prev = init_distr(num_unblocked);
-	return do_filter(__world, sensor_data, action, prev);
+		prev = init_distr(current_world.num_unblocked_nodes);
+	res = do_filter(current_world.nodes, sensor_data, action, prev);
+	free(prev);
+	return res;
 }
