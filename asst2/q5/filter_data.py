@@ -12,15 +12,15 @@ class filter_data:
             self.__calculate_prob_distrs(actions, sensors)
 
     def get_next_prob_distr(self):
-        if len(self.data) == 0:
+        if self.num_data_sets == 0:
             return None
         self.current_distr_idx += 1
-        if self.current_distr_idx > self.num_data_sets:
+        if self.current_distr_idx >= self.num_data_sets:
             self.current_distr_idx = 0
         return self.data[self.current_distr_idx]
 
     def get_prev_prob_distr(self):
-        if len(self.data) == 0:
+        if self.num_data_sets == 0:
             return None
         self.current_distr_idx -= 1
         if self.current_distr_idx < 0:
@@ -52,14 +52,15 @@ class filter_data:
             return
 
         prev_distr = None
-        self.num_data_sets = len(actions)
-        for i in range(self.num_data_sets):
+        for i in range(len(actions)):
             sensor = ctypes.c_char(bytes(sensor_readings[i], encoding='utf-8'))
             action = ctypes.c_char(bytes(actions[i], encoding='utf-8'))
             ret = self.lib.filter_step(sensor, action, prev_distr)
             prev_distr = ret
             self.data.append([elm for elm in ret.contents])
+        self.num_data_sets = len(self.data)
 
     def __reset_data_sets(self):
         self.data = []
         self.current_distr_idx = 0
+        self.num_data_sets = 0
