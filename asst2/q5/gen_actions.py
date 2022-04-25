@@ -33,8 +33,6 @@ def valid_endpoint(p, nodes):
         return False
     return True
 
-
-
 def read_file(fi):
     with open(fi, 'r') as f:
         line = f.readline().strip().split()

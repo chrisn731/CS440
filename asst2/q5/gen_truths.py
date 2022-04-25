@@ -26,10 +26,13 @@ def do_action(cells, src, action):
     elif action == 'L':
         deltax = -1
 
-    dst = cells.get((src[0] + deltax, src[1] + deltay), None)
+    # This looks mad funky, but it is a hack to make this work
+    # without having to rewrite a bunch of other stuff.
+    res_coord = (src[0] + deltay, src[1] + deltax)
+    dst = cells.get(res_coord, None)
     if dst is None or dst == Terrain.B:
         return src
-    return (src[0] + deltax, src[1] + deltay)
+    return res_coord
 
 def gen_models(cells, src, actions):
     path = []

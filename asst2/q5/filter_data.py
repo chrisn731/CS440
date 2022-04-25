@@ -1,15 +1,13 @@
 import ctypes
 
 class FilterData:
-    NUM_ROWS = 100
-    NUM_COLS = 50
-
     def __init__(self, world_file = "", actions = "", sensors = "", library_name = "./filter.so"):
         self.lib = ctypes.cdll.LoadLibrary(library_name)
         if len(world_file) != 0:
             self.load_world(world_file)
         if len(actions) != 0 and len(sensors) != 0:
             self.__calculate_prob_distrs(actions, sensors)
+        self.__reset_data_sets()
 
     def get_next_prob_distr(self):
         if self.num_data_sets == 0:
@@ -30,7 +28,6 @@ class FilterData:
     def get_curr_prob_distr(self):
         return self.data[self.current_distr_idx]
 
-    # Use with caution
     def get_prob_distr_at(self, idx):
         return self.data[idx] if idx < self.num_data_sets and idx >= 0 else None
 
@@ -62,5 +59,5 @@ class FilterData:
 
     def __reset_data_sets(self):
         self.data = []
-        self.current_distr_idx = 0
+        self.current_distr_idx = -1
         self.num_data_sets = 0

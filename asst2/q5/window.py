@@ -203,6 +203,7 @@ class Window():
             tmp = tmp.resize((self.scalar - 5, self.scalar - 5))
             self.rover_img = ImageTk.PhotoImage(tmp)
             self.rover = self.canvas.create_image(0, 0, image=self.rover_img)
+        print("Setting rover to: " + str(coords[1]) + ", " + str(coords[0]))
         self.canvas.moveto(self.rover, self.scale(coords[1]), self.scale(coords[0]))
 
     def do_simulation():
@@ -248,16 +249,21 @@ class Window():
     def update_action_sensor_labels(self):
         if self.seq_idx == 0:
             self.next_actions_label.config(text = self.action_seq)
+            self.prev_actions_label.config(text = "")
+            self.curr_action_label.config(text = "")
+
+            self.prev_senses_label.config(text = "")
+            self.curr_sense_label.config(text = "")
             self.next_senses_label.config(text = self.sensor_seq)
             return
 
-        self.prev_actions_label.config(text = self.action_seq[:self.seq_idx])
-        self.curr_action_label.config(text = self.action_seq[self.seq_idx:self.seq_idx + 1])
-        self.next_actions_label.config(text = self.action_seq[self.seq_idx + 1:])
+        self.prev_actions_label.config(text = self.action_seq[:self.seq_idx - 1])
+        self.curr_action_label.config(text = self.action_seq[self.seq_idx - 1:self.seq_idx])
+        self.next_actions_label.config(text = self.action_seq[self.seq_idx:])
 
-        self.prev_senses_label.config(text = self.sensor_seq[:self.seq_idx])
-        self.curr_sense_label.config(text = self.sensor_seq[self.seq_idx:self.seq_idx + 1])
-        self.next_senses_label.config(text = self.sensor_seq[self.seq_idx + 1:])
+        self.prev_senses_label.config(text = self.sensor_seq[:self.seq_idx - 1])
+        self.curr_sense_label.config(text = self.sensor_seq[self.seq_idx - 1:self.seq_idx])
+        self.next_senses_label.config(text = self.sensor_seq[self.seq_idx:])
 
     def next_action(self):
         if not self.has_world or not self.has_actions:
@@ -265,7 +271,12 @@ class Window():
         self.seq_idx += 1
         if self.seq_idx > self.NUM_ACTIONS:
             self.seq_idx = 0
-        curr_state = self.filter_data.get_next_prob_distr()
+        #curr_state = self.filter_data.get_next_prob_distr()
+        if self.seq_idx != 0:
+            curr_state = self.filter_data.get_prob_distr_at(self.seq_idx - 1)
+        else:
+            # seq_idx == 0 is not really a state with valid probability distr
+            curr_state = [0.0 for i in range(self.num_cols * self.num_rows)]
         self.draw_heat_map(curr_state)
         self.set_rover_widget_pos(self.locations[self.seq_idx])
         self.update_action_sensor_labels()
@@ -276,7 +287,13 @@ class Window():
         self.seq_idx -= 1
         if self.seq_idx < 0:
             self.seq_idx = self.NUM_ACTIONS
-        curr_distr = self.filter_data.get_prev_prob_distr()
+        if self.seq_idx != 0:
+            curr_distr = self.filter_data.get_prob_distr_at(self.seq_idx - 1)
+        else:
+            # seq_idx == 0 is not really a state with valid probability distr
+            curr_distr = [0.0 for i in range(self.num_cols * self.num_rows)]
+        #curr_distr = self.filter_data.get_prev_prob_distr()
+        #curr_distr = self.filter_data.get_prob_distr_at(self.seq_idx - 1)
         self.draw_heat_map(curr_distr)
         self.set_rover_widget_pos(self.locations[self.seq_idx])
         self.update_action_sensor_labels()
