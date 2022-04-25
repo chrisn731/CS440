@@ -28,4 +28,4 @@ for i in range(100):
     start = ret
 
 # Uncomment for output
-#print_carray(start)
+print_carray(start)
