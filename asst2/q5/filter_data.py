@@ -1,4 +1,5 @@
 import ctypes
+import math
 
 class FilterData:
     def __init__(self, world_file = "", actions = "", sensors = "", library_name = "./filter.so"):
@@ -42,6 +43,31 @@ class FilterData:
         # Clear out previous data sets
         self.__reset_data_sets()
         self.__calculate_prob_distrs(actions, sensors)
+
+    def calculate_error(self, num_cols, num_rows, true_locations, iters_to_skip):
+        self.avg_err = []
+        err_val = []
+        if self.num_data_sets == 0:
+            return self.avg_err
+
+        for i in range(len(true_locations)):
+            if i < iters_to_skip:
+                err_val.append(0.0)
+                self.avg_err.append(0.0)
+                continue
+            max_val = 0.0
+            max_idx = 0
+            for idx in range(len(self.data[i])):
+                if self.data[i][idx] > max_val:
+                    max_val = self.data[i][idx]
+                    max_idx = idx
+            row = max_idx // num_cols
+            col = max_idx % num_cols
+            true_coord = true_locations[i]
+            distance = math.sqrt((true_coord[0] - row)**2 + (true_coord[1] - col)**2)
+            err_val.append(distance)
+            self.avg_err.append(math.fsum(err_val) / (i - iters_to_skip + 1))
+        return self.avg_err
 
     def __calculate_prob_distrs(self, actions, sensor_readings):
         if len(actions) != len(sensor_readings):

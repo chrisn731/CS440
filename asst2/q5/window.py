@@ -162,8 +162,10 @@ class Window():
         for cell in cells:
             cell_attr = cell.split()
             cell_terrains.append(cell_attr[2])
+        file_name = file_name[file_name.rfind('/') + 1:]
         self.world_file_val.config(text=file_name)
         self.init_canvas(cell_terrains)
+        self.seq_idx = 0
 
     def load_actions(self):
         file_name = self.browse_files('a')
@@ -183,8 +185,11 @@ class Window():
 
         self.update_action_sensor_labels()
         self.filter_data.set_action_sensor_data(self.action_seq, self.sensor_seq)
+        self.avg_err = self.filter_data.calculate_error(self.num_cols, self.num_rows, self.locations[1:], 5)
         self.set_rover_widget_pos(self.locations[0])
+        file_name = file_name[file_name.rfind('/') + 1:]
         self.action_file_val.config(text=file_name)
+        self.seq_idx = 0
 
     def browse_files(self, typ):
         if typ == 'w':
@@ -203,7 +208,7 @@ class Window():
             tmp = tmp.resize((self.scalar - 5, self.scalar - 5))
             self.rover_img = ImageTk.PhotoImage(tmp)
             self.rover = self.canvas.create_image(0, 0, image=self.rover_img)
-        print("Setting rover to: " + str(coords[1]) + ", " + str(coords[0]))
+        #print("Setting rover to: " + str(coords[1]) + ", " + str(coords[0]))
         self.canvas.moveto(self.rover, self.scale(coords[1]), self.scale(coords[0]))
 
     def do_simulation():
@@ -212,6 +217,7 @@ class Window():
     # Creates the tiles on the canvas and stores them in a list for future use.
     def init_canvas(self, cell_terrains):
         self.canvas.delete('all')
+        self.rover = None
         self.cells = []
 
         # Traverses the world by columns, not rows, as the world file has
@@ -240,11 +246,8 @@ class Window():
             0,
             self.scale(self.num_cols),
             self.scale(self.num_rows)))
-
-        #self.reset_sequence()
-
-    def reset_actions(self):
-        self.seq_idx = 0
+        if self.has_actions:
+            self.set_rover_widget_pos(self.locations[0])
 
     def update_action_sensor_labels(self):
         if self.seq_idx == 0:
@@ -303,6 +306,8 @@ class Window():
         for y in range(self.num_rows):
             for x in range(self.num_cols):
                 cell = self.cells[y][x]
+                if cell[1] == 'B':
+                    continue
                 self.canvas.itemconfig(cell[0],
                         fill=self.get_color(pr_distr[y * self.num_cols + x]))
 
@@ -312,7 +317,8 @@ class Window():
     # Returns a string in "#0x" format.
     def get_color(self, pr):
         max_val = (255, 0, 0) #red
-        min_val = (255, 153, 204) #light pink
+        #min_val = (255, 153, 204) #light pink
+        min_val = (203, 195, 227)
 
         r_delta = max_val[0] - min_val[0]
         g_delta = max_val[1] - min_val[1]
