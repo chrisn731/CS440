@@ -48,6 +48,9 @@ class Window():
         # NOTE: Index 0 is the src. Index 1 corresponds to the first action
         self.locations = []
 
+        # Number of unblocked cells
+        self.num_unblocked = 0
+
         self.rover = None
         self.init_window(width, height)
 
@@ -158,10 +161,13 @@ class Window():
         self.num_rows = int(dim[0])
         self.num_cols = int(dim[1])
 
+        self.num_unblocked = 0
         cell_terrains = []
         for cell in cells:
             cell_attr = cell.split()
             cell_terrains.append(cell_attr[2])
+            if cell_attr[2] != 'B':
+                self.num_unblocked += 1
         file_name = file_name[file_name.rfind('/') + 1:]
         self.world_file_val.config(text=file_name)
         self.init_canvas(cell_terrains)
@@ -209,7 +215,9 @@ class Window():
             self.rover_img = ImageTk.PhotoImage(tmp)
             self.rover = self.canvas.create_image(0, 0, image=self.rover_img)
         #print("Setting rover to: " + str(coords[1]) + ", " + str(coords[0]))
-        self.canvas.moveto(self.rover, self.scale(coords[1]), self.scale(coords[0]))
+        self.canvas.moveto(self.rover,
+                self.scale(coords[1]) + 5/2,
+                self.scale(coords[0]) + 5/2)
 
     def do_simulation():
        pass
@@ -317,8 +325,10 @@ class Window():
     # Returns a string in "#0x" format.
     def get_color(self, pr):
         max_val = (255, 0, 0) #red
-        #min_val = (255, 153, 204) #light pink
-        min_val = (203, 195, 227)
+        min_val = (203, 195, 227) #light purple
+
+        if pr < 1.0 / self.num_unblocked:
+            return "#FFFFFF"
 
         r_delta = max_val[0] - min_val[0]
         g_delta = max_val[1] - min_val[1]
