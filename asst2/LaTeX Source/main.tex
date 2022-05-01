@@ -3,6 +3,8 @@
 \usepackage{amsmath}
 \usepackage{layout}
 \usepackage{float}
+\usepackage{algorithm}
+\usepackage{algorithmic}
 \usepackage[shortlabels]{enumitem}
 \usepackage{graphicx}
 \setlength{\voffset}{-0.75in}
@@ -532,5 +534,244 @@
     
     \item For example readings generated, please refer to the included python scripts and the
         files under the folder "q5" and the generated results under "results" within "q5".
+    \clearpage
+    \item \textbf{Filtering Visualizations}\\
+        For the visualizations of the heat map, we created a program for you to interactively use.
+        For relevant documentation read the README under 'q5' folder. As for the pictures, we have
+        attached heatmaps for iterations 10, 50, and 100 along with the perceived action/sensors and
+        the true actions. As for the meaning of the heat map:\\
+        Grey cells represent a blocked cell with 0 probability.\\
+        White cells represent a very low probability.\\
+        Blue cells represent low/medium probability.\\
+        Light red cells represent medium/high probability.\\
+        Dark red cells represent an extremely high probability.
 \end{enumerate}
+        \begin{figure}[H]
+            \centering
+            \includegraphics[scale=0.3]{images/10iter.png}
+            \caption{Heatmap after 10 iterations.}
+            \label{fig:heatmap_10iter}
+            \small
+            Actions: LLUDUDRURR\\
+            Sensors: NNHNHNNNNN\\
+            True Movement: LLUDUDRURR
+        \end{figure}
+        
+        \begin{figure}[H]
+            \centering
+            \includegraphics[scale=0.3]{images/50iter.png}
+            \caption{Heatmap after 50 iterations}
+            \label{fig:heatmap_50iter}
+                    \small
+                    Reported Actions:\\ LLUDUDRURRLDLRLLRDDLLLRLLRDDURDDDUUULRRUUDDRUUDRUD\\
+                    Reported Sensors:\\ NNHNHNNNNNNNNNNNNHNHNTNTNHTNNNHNNNHNTNHNNHTNNHHNHN\\
+                    True Movement (Dashes denote moments the rover stays still):\\
+                        LLUDUDRURRLDLRL-RDDLLLRLLRDD--DDDUUULRR-UDDR-U-RUD
+        \end{figure}
+        
+        \begin{figure}[H]
+            \centering
+            \includegraphics[scale=0.3]{images/100iter.png}
+            \caption{Heatmap after 100 iterations}
+            \label{fig:heatmap_100iter}
+            \small
+            Reported Actions:\\ 
+                LLUDUDRURRLDLRLLRDDLLLRLLRDDURDDDUUULRRUUDDRUUDRUD\\
+                DDDUDLDLLLURDDRLULDULLLDULUDRRDLLDLRLLLLRLRURRRLL\\
+            Reported Sensors:\\
+                NNHNHNNNNNNNNNNNNHNHNTNTNHTNNNHNNNHNTNHNNHTNNHHNHN\\
+                THHTHTTNNNHNNNNNNHNHHNNHNNTNNNNNNNHNNHHNNHNNTNHNN\\
+            True Movement (Dashes denote moments the rover stays still):\\
+                LLUDUDRURRLDLRL-RDDLLLRLLRDD--DDDUUULRR-UDDR-U-RUD\\D-D-UDLDLLLURD-RLULDU-LLDULU-RRDLLDLR-LLLRLRURRRLL
+        \end{figure}
+        As you can see, by the 100th iteration, we are dark red on the cell that the agent is on. This
+        deep red color denotes a probability of almost 1 meaning that our filtering algorithm is just 
+        about certain that it is on that square.
+
+        \clearpage
+        \textbf{Plotting Error}\\
+        \begin{figure}[H]
+            \centering
+            \includegraphics[width=\linewidth]{images/filter_err.png}
+            \caption{Average number of cells off from true agent location for 100 actions 
+                over 100 experiments with first 5 actions skipped.}
+            \label{fig:filter_err}
+            \small
+        \end{figure}
+        For plotting the error we found the number of cells away the max probability was from the true location
+        of the agent for each action across each experiment. We took the average at each iteration across 100 
+        experiments and got this plot. As you can see, as the number of actions increases the filtering algorithm
+        gets closer and closer, on average, to the true location of the agent. 
+        
+        \clearpage
+        \textbf{Agent Cell Probability}\\
+        \begin{figure}[H]
+            \centering
+            \includegraphics[width=\linewidth]{images/agent_cell_prob.png}
+            \caption{Average Probability of Agent's Cell over 100 experiments}
+            \label{fig:agent_prob}
+            \small
+        \end{figure}
+        For plotting the probability of the agent's cell, we simply kept track of where he was in each experiment.
+        Then, for each action we average the probability over 100 experiments. From the resulting graph we can see
+        that for most of the time the filtering algorithm has a pretty good guess of where the agent truly is.
+        However, we can also notice a lot of dips that indicate that the experiments have overlapping areas in
+        which the agent reports one thing, but does another. Thus tricking the filtering algorithm into thinking
+        the agent is somewhere else.
+
+\newpage
+\section*{Question 6}
+\begin{enumerate}[a)]
+    \item Expected net gain from buying $C_1$:
+    \begin{itemize}
+        \item \$4000 market value if in good shape
+        \item \$3000 to buy
+        \item \$1400 in repairs to make it in good shape (if not already)
+        \item \$100 for mechanic test
+        \item If in (70\% chance) good shape : (4000 - 3000) = \$1000 net profit
+        \item If in (30\% chance) bad shape: (4000 - (3000 + 1400)) = -\$400 net profit
+    \end{itemize}
+    Net gain:
+        \[ (0.7 * 1000) + (0.3 * -400) = \$580 \]
+    \item
+        \begin{gather*}
+            P(pass(C_1)) = \sum_{q}P(pass(C_1) | q)\\
+                    = P(pass(C_1) | q^+) P(q^+) + P(pass(C_1) | q^-) P(q^-)\\
+                    = (0.8 * 0.7) + (0.35 * 0.3) \\= 0.665\\
+            \\
+            P(\neg Pass(C_1)) = 1 - P(pass(C_1)) = 1 - 0.665 = 0.335\\
+        \end{gather*}
+        Using this information we can find:
+        \begin{gather*}
+            P(q^+ | Pass) = \frac{P(Pass | q^+)P(q^+)}{P(Pass)} \approx 0.842\\
+            \\
+            P(q^+ | \neg Pass) = \frac{P(\neg Pass | q^+)P(q^+)}{P(\neg Pass)} \approx 0.418\\
+            \\
+            P(q^- | Pass) = 1 - P(q^+ | Pass) = 1 - 0.842 = 0.158\\
+            \\
+            P(q^- | \neg Pass) = 1 - P(q^+ | \neg Pass) = 1 - 0.418 = 0.582\\
+        \end{gather*}
+    \clearpage
+    \item Using:
+        \[ EU(A|E) = \sum_{i}P(Result_i(A) | Do(A), E) U(Result_i(A)) \]
+    We can find:
+        \begin{gather*}
+            EU(buy | Pass) = \sum_{i}P(Result_i(buy) | Pass) U(Result_i(buy))\\
+                = P(q^+ | Pass) U(q^+ | buy) + P(q^-,Pass)U(q^- | buy)\\
+                = (0.842 * 1000) + (0.158 * -400) = 778.8\\
+            \\
+            EU(buy | \neg Pass) = \sum_{i}P(Result_i(buy) | \neg Pass) U(Result_i(buy)) \\
+                = P(q^+ | \neg Pass) U(q^+ | buy) + P(q^-, \neg Pass)U(q^- | buy)\\
+                = (0.418 * 1000) + (0.582 * -400) = 185.2\\
+            \\
+            EU(\neg buy | Pass) = \sum_{i}P(Result_i(\neg buy) | Pass) U(Result_i(\neg buy)) \\
+                = P(q^+ | Pass) U(q^+ | \neg buy) + P(q^-,Pass)U(q^- | \neg buy)\\
+                = (0.842 * 0) + (0.158 * 0) = 0\\
+            \\
+            EU(\neg buy | \neg Pass) = \sum_{i}P(Result_i(\neg buy) | \neg Pass) U(Result_i(\neg buy)) \\
+                = P(q^+ | \neg Pass) U(q^+ | \neg buy) + P(q^-, \neg Pass)U(q^- | \neg buy)\\
+                = (0.418 * 0) + (0.582 * 0) = 0
+        \end{gather*}
+        Therefore, the best decision given a pass is to buy, and the best decision 
+            given a fail is to still buy.
+    
+    \clearpage
+    \item Let the mechanic test be denoted by $T_j$.\\
+    The value of perfect information is given by:
+        \begin{gather*}
+            VPI(T_j) = (\sum_{t_j}P(T_j=t_j)EU(\alpha_{t_j}|T_j=t_j)) - EU(\alpha)\\
+                = [P(T_j = Pass) EU(\alpha_{Pass} | Pass) + P(T_j = \neg Pass) EU(\alpha_{\neg Pass} | \neg Pass)] - EU(\alpha)\\
+                = [P(T_j = Pass) EU(buy | Pass) + P(T_j = \neg Pass) EU(buy | \neg Pass)] - EU(\alpha)\\
+                = ((0.665 * 778.8) + (0.335 * 185.2)) - 580\\ 
+                \approx -0.06
+        \end{gather*}
+    Therefore, you should not take $C_1$ to the mechanic as you will end up losing more money from it
+    costing \$100.
+\end{enumerate}
+
+\newpage
+\section*{Question 7}
+For the following sections of information, it was all acquired from the code under the folder "q7".
+    \begin{itemize}
+        \item \textbf{Original Utilities}\\
+            For our original utilities, we start with an array of 0's. As value iteration runs, 
+            it will update this array. To understand this decision further refer to the algorithms
+            written under the \textbf{implementation} section.
+        \item \textbf{Intermediate Results}\\
+            \begin{center}
+            \begin{tabular}{|c|c|c|}
+                \hline
+                Iteration & Optimal Utilities $U$ & Policy $\pi$ \\
+                \hline
+                $1$ & $[0, 0, 0, 0]$ & $[1, 2, 3, 1]$\\
+                $2$ & $[0, 0, 1.0, 0]$ & $ [1, 2, 3, 1]$\\
+                $3$ & $[0, 0.72, 1.0, 0.81]$ & $[2, 2, 3, 1]$\\
+                $20$ & $[3.2929, 3.7708, 4.3930, 3.8304]$ & $[2, 2, 3, 1]$\\
+                $40$ & $[3.8516, 4.3366, 4.9499, 4.3972]$ & $[2, 2, 3, 1]$\\
+                $60$ & $[3.9199, 4.4050, 5.0181, 4.4656]$ & $[2, 2, 3, 1]$\\
+                $80$ & $[3.9282, 4.4133, 5.0264, 4.4739]$ & $[2, 2, 3, 1]$\\
+                $100$ & $[3.9292, 4.4143, 5.0274, 4.4749]$ & $[2, 2, 3, 1]$\\
+                $120$ & $[3.9293, 4.4144, 5.0276, 4.4751]$ & $[2, 2, 3, 1]$\\
+                \hline
+            \end{tabular}\\
+            \textbf{Note:} The utilities are denoted by for any $s_i$ the utility is $U[i - 1]$. Thus,
+                the utility of $s_1$ is $U[1 - 1] = U[0]$. \\Similarly for policy, for any $s_i$ the 
+                policy is $\pi[i - 1]$. Thus, for the policy of $s_3$ the action to take is
+                $\pi[3 - 1] = \pi[2] = 3 = a_3$ (for the 120$^{th}$ iteration).
+            
+            \end{center}
+        \clearpage
+        \item \textbf{Implementation}\\
+            To calculate the optimal utilities and the optimal policy, we used the following algorithms
+            and converted them to python code. We set our convergence criterion to be within
+            5 decimal places or 0.00001.
+            \begin{algorithm}
+            \caption{Finding Optimal Utilities}
+            \begin{algorithmic}
+                \STATE \textbf{INPUTS:} Set of states $S$, transitional model $P(s'|s,a)$,
+                    discount factor $\gamma$, and max error allowed in the utility of any state $\epsilon$
+                \STATE \textbf{OUTPUT:} The optimal utilities $U$
+                \STATE{}
+                \STATE Initialize $U'$ to be array of zeros with length = $|S|$
+                \WHILE{True}
+                    \STATE $U \leftarrow U'$
+                    \STATE $\delta \leftarrow 0$
+                    \FOR{$s \in S$}
+                        \STATE $U'[s] \leftarrow r(s) + \gamma max_a\sum_{s'}P(s'|s, a)U[s']$
+                        \STATE $\delta \leftarrow max(\delta, |U'[s] - U[s]|)$
+                    \ENDFOR
+                    \IF{$\delta \leq \frac{\epsilon(1-\gamma)}{\gamma} $}
+                        \STATE \textbf{break}
+                    \ENDIF
+                \ENDWHILE
+                \STATE \textbf{return} $U$
+            \end{algorithmic}
+            \end{algorithm}
+            
+            \begin{algorithm}
+            \caption{Finding Optimal Policy}
+            \begin{algorithmic}
+                \STATE \textbf{INPUTS:} Set of states $S$, transitional model $P(s'|s,a)$, and the
+                    optimal utilities of each state $U$
+                \STATE \textbf{OUTPUT:} The optimal policy $\pi^*$
+                \STATE{}
+                \STATE Initialize $\pi^*$ to be array of actions with length = $|S|$
+                \FOR{$s \in S$}
+                    \STATE $\pi^*(s) \leftarrow argmax_a\sum_{s'}P(s'|s, a)U[s']$
+                \ENDFOR
+                \STATE \textbf{return} $\pi^*$
+            \end{algorithmic}
+            \end{algorithm}
+            These algorithms gave us a computation time: 0.113s over 124 iterations and our final result to be:\\
+            $V_{opt} \approx [3.92937, 4.41448, 5.02761, 4.47512]$\\
+            and\\
+            $\pi^* = [2, 2, 3, 1]$\\
+            \textbf{Note:} The utilities are denoted by for any $s_i$ the utility is $U[i - 1]$. Thus,
+                the utility of $s_1$ is $U[1 - 1] = U[0] = 3.92937$. \\
+                Similarly for policy, for any $s_i$ the 
+                policy is $\pi[i - 1]$. Thus, for the policy of $s_4$ the action to take is
+                $\pi[4 - 1] = \pi[3] = 1 = a_1$
+        
+    \end{itemize}
+
 \end{document}
