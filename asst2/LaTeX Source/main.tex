@@ -539,12 +539,14 @@
         For the visualizations of the heat map, we created a program for you to interactively use.
         For relevant documentation read the README under 'q5' folder. As for the pictures, we have
         attached heatmaps for iterations 10, 50, and 100 along with the perceived action/sensors and
-        the true actions. As for the meaning of the heat map:\\
-        Grey cells represent a blocked cell with 0 probability.\\
-        White cells represent a very low probability.\\
-        Blue cells represent low/medium probability.\\
-        Light red cells represent medium/high probability.\\
-        Dark red cells represent an extremely high probability.
+        the true actions. As for the meaning of the heat map:
+        \begin{itemize}
+            \item Grey cells represent a blocked cell with 0 probability.
+            \item White cells represent a very low probability.
+            \item Blue cells represent low/medium probability.
+            \item Light red cells represent medium/high probability.
+            \item Dark red cells represent an extremely high probability.
+        \end{itemize}
 \end{enumerate}
         \begin{figure}[H]
             \centering
@@ -714,8 +716,8 @@ For the following sections of information, it was all acquired from the code und
                 $120$ & $[3.9293, 4.4144, 5.0276, 4.4751]$ & $[2, 2, 3, 1]$\\
                 \hline
             \end{tabular}\\
-            \textbf{Note:} The utilities are denoted by for any $s_i$ the utility is $U[i - 1]$. Thus,
-                the utility of $s_1$ is $U[1 - 1] = U[0]$. \\Similarly for policy, for any $s_i$ the 
+            \textbf{Note:} For any $s_i$ the utility is $U[i - 1]$. Thus,
+                the utility of $s_1$ is $U[1 - 1] = U[0]$. Similarly, for any $s_i$ the 
                 policy is $\pi[i - 1]$. Thus, for the policy of $s_3$ the action to take is
                 $\pi[3 - 1] = \pi[2] = 3 = a_3$ (for the 120$^{th}$ iteration).
             
@@ -766,12 +768,9 @@ For the following sections of information, it was all acquired from the code und
             $V_{opt} \approx [3.92937, 4.41448, 5.02761, 4.47512]$\\
             and\\
             $\pi^* = [2, 2, 3, 1]$\\
-            \textbf{Note:} The utilities are denoted by for any $s_i$ the utility is $U[i - 1]$. Thus,
-                the utility of $s_1$ is $U[1 - 1] = U[0] = 3.92937$. \\
-                Similarly for policy, for any $s_i$ the 
+            \textbf{Note:} For any $s_i$ the utility is $U[i - 1]$. Thus,
+                the utility of $s_1$ is $U[1 - 1] = U[0]$. Similarly, for any $s_i$ the 
                 policy is $\pi[i - 1]$. Thus, for the policy of $s_4$ the action to take is
-                $\pi[4 - 1] = \pi[3] = 1 = a_1$
-        
+                $\pi[4 - 1] = \pi[3] = 1 = a_1$.
     \end{itemize}
-
 \end{document}
