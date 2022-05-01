@@ -726,7 +726,7 @@ For the following sections of information, it was all acquired from the code und
         \item \textbf{Implementation}\\
             To calculate the optimal utilities and the optimal policy, we used the following algorithms
             and converted them to python code. We set our convergence criterion to be within
-            5 decimal places or 0.00001.
+            5 decimal places or 0.00001. We also set our discount factor, $\gamma$, to be 0.9.
             \begin{algorithm}
             \caption{Finding Optimal Utilities}
             \begin{algorithmic}
@@ -765,9 +765,9 @@ For the following sections of information, it was all acquired from the code und
             \end{algorithmic}
             \end{algorithm}
             These algorithms gave us a computation time: 0.113s over 124 iterations and our final result to be:\\
-            $V_{opt} \approx [3.92937, 4.41448, 5.02761, 4.47512]$\\
-            and\\
-            $\pi^* = [2, 2, 3, 1]$\\
+            $V_{opt} \approx [3.92937, 4.41448, 5.02761, 4.47512]$ and $\pi^* = [2, 2, 3, 1]$ \\
+            Thus, $\pi^*(s_1)=a_2, \pi^*(s_2)=a_2, \pi^*(s_3)=a_3,$ and $\pi^*(s_4)=a_1$\\
+            \\
             \textbf{Note:} For any $s_i$ the utility is $U[i - 1]$. Thus,
                 the utility of $s_1$ is $U[1 - 1] = U[0]$. Similarly, for any $s_i$ the 
                 policy is $\pi[i - 1]$. Thus, for the policy of $s_4$ the action to take is
