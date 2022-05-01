@@ -64,10 +64,10 @@ How to use
 	
 	* As for the grid, you will see colors start to change and swap around. Simply put:
 		** Grey cells represent a blocked cell with 0 probability.
-        ** White cells represent a very low probability.
-        ** Blue cells represent low/medium probability.
-        ** Light red cells represent medium/high probability.
-        ** Dark red cells represent an extremely high probability.
+        	** White cells represent a very low probability.
+        	** Blue cells represent low/medium probability.
+        	** Light red cells represent medium/high probability.
+        	** Dark red cells represent an extremely high probability.
 	
 3. Plot of Filter Error
 	* To generate the filter error plot, simply call
