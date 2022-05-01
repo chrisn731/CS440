@@ -77,8 +77,10 @@ class AgentCellPlot:
         plt.show()
 
 def main():
-    if len(sys.argv) == 3:
-        AgentCellPlot(sys.argv[1], sys.argv[2]).show()
+    if len(sys.argv) != 3:
+        print("Usage: %s worlds_directory actions_directory" % (sys.argv[0]))
+        exit(1)
+    AgentCellPlot(sys.argv[1], sys.argv[2]).show()
 
 if __name__ == "__main__":
     main()
