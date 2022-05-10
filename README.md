@@ -11,7 +11,8 @@ The first assignment was all about general problem using different methods such 
 	<li> Constrain Satisfaction Problem (CSP) </li>
 	<li> Logic-based Reasoning </li>
 </ul>
-The project includes an interactive graph visual that looks like:
+The project includes an interactive graph meant to visualize the A* and Theta* algorithms from the given
+assignment. Here is a glimpse at the graph visualization on a random graph with a blocked node percentage of 10%:
 <p align="center">
 	<img src="https://github.com/chrisn731/CS440/blob/master/asst1/extras/path_finding.png?raw=true" alt="Path Finding"/>
 </p>
