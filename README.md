@@ -59,5 +59,5 @@ of cells with the highest probability the rover was on. The visualization looked
 	100 Iterations of filtering:
 	<img src="https://github.com/chrisn731/CS440/blob/master/asst2/LaTeX%20Source/images/100iter.png?raw=true" alt="100 Iteration of Filtering"/>
 </p>
-For information on how to use this interactive visualization check the README.txt under asst2.
+For information on how to use this interactive visualization check the README.txt under asst2/q5.
 
